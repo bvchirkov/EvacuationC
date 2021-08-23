@@ -31,9 +31,19 @@ void print_info(const double time, const ArrayList * zones, const double numofpe
     printf("%8.2f\n", numofpeople);
 }
 
-int main (void)
+int main (int argc, char** argv)
 {
-    bim_object_t *bim = bim_tools_new(ROOT_PATH"/two_levels.json");
+    if (argc == 1)
+    {
+        printf("Укажите путь к файлу с описанием здания\n");
+        return 1;
+    } else if (argc > 2)
+    {
+        printf("Слишком много параметров\n");
+        return 1;
+    }
+
+    bim_object_t *bim = bim_tools_new(argv[1]);
 
     ArrayList *zones = bim_tools_get_zones_list();
     ArrayList *transits = bim_tools_get_transits_list();
@@ -44,6 +54,7 @@ int main (void)
             bim_tools_set_people_to_zone(zone, (zone->area * 0.2));
         //printf("Element id::name: %lu[%lu]::%-32s::%.2f\n",  zone->base->id, i, zone->base->name, zone->num_of_people);
     }
+    printf("Файл описания объекта: %s\n", argv[1]);
     printf("Название объекта: %s\n", bim->name);
     printf("Площадь здания: %.2f m^2\n", bim_tools_get_area_bim(bim));
     printf("Количество этажей: %i\n", bim->levels_count);
@@ -56,8 +67,8 @@ int main (void)
 
     evac_def_modeling_step(bim, zones->length);
     evac_time_reset();
-    bim_transit_t *out1 = transits->data[2];
-    out1->is_blocked = false;
+//    bim_transit_t *out1 = transits->data[2];
+//    out1->is_blocked = false;
 
     double remainder = 0.0; // Количество человек, которое может остаться в зд. для остановки цикла
     while(true)
@@ -78,9 +89,11 @@ int main (void)
         if (num_of_people <= remainder) break;
     }
 
-    printf("Длительность эвакуации: %.2f с.\n", evac_time_s());
-    printf("Количество человек в безопасной зоне: %.2f чел.\n", ((bim_zone_t*)zones->data[zones->length-1])->num_of_people);
+    printf("---------------------------------------\n");
     printf("Количество человек в здании: %.2f чел.\n", bim_tools_get_numofpeople(bim));
+    printf("Количество человек в безопасной зоне: %.2f чел.\n", ((bim_zone_t*)zones->data[zones->length-1])->num_of_people);
+    printf("Длительность эвакуации: %.2f с., %.2f мин.\n", evac_time_s(), evac_time_m());
+    printf("---------------------------------------\n");
 
     arraylist_free(zones);
     arraylist_free(transits);
