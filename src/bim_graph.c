@@ -19,12 +19,12 @@ bim_graph*  _graph_create(const bim_edge *edges, uint32_t edge_count, uint32_t n
 void        _graph_create_edges(const ArrayList *list_doors, ArrayListEqualFunc callback, bim_edge *edges, const ArrayList *rooms_and_stairs);
 int32_t     _arraylist_equal_callback(const ArrayListValue value1, const ArrayListValue value2);
 
-bim_graph *bim_graph_new(const ArrayList *zones, const ArrayList *transits)
+bim_graph *bim_graph_new(const bim_t *bim)
 {
-    bim_edge edges[transits->length];
-    _graph_create_edges(transits, _arraylist_equal_callback, edges, zones);
+    bim_edge edges[bim->transits->length];
+    _graph_create_edges(bim->transits, _arraylist_equal_callback, edges, bim->zones);
 
-    bim_graph *bim_graph = _graph_create(edges, transits->length, zones->length);
+    bim_graph *bim_graph = _graph_create(edges, bim->transits->length, bim->zones->length);
     if (!bim_graph)
     {
         return NULL;

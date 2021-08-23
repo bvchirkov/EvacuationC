@@ -80,9 +80,17 @@ typedef struct
     bim_zone_t  *outside;       ///< Зона вне здания
 } bim_object_t;
 
-bim_object_t* bim_tools_new     (const char *file);
-bim_object_t* bim_tools_copy    (const bim_object_t* bim);
-void          bim_tools_free    (bim_object_t* bim);
+typedef struct
+{
+    bim_json_object_t   *json;      ///< Ссылка на структуру, полученную из json файла
+    bim_object_t        *object;    ///< Сслыка на расширенную структуру здания
+    ArrayList           *zones;     ///< Список зон объекта
+    ArrayList           *transits;  ///< Список переходов объекта
+} bim_t;
+
+bim_t *bim_tools_new    (const char *file);
+bim_t *bim_tools_copy   (const bim_t *bim);
+void   bim_tools_free   (bim_t* bim);
 
 bim_json_object_t* bim_tools_get_json_bim (void);
 
@@ -90,13 +98,10 @@ bim_json_object_t* bim_tools_get_json_bim (void);
 void    bim_tools_set_people_to_zone (bim_zone_t* element, float num_of_people);
 
 // Подсчитывает количество людей в здании по расширенной структуре
-double  bim_tools_get_numofpeople(const bim_object_t *bim);
+double  bim_tools_get_numofpeople(const bim_t *bim);
 
 //Подсчитывает суммарную площадь элементов всего здания
-double  bim_tools_get_area_bim          (const bim_object_t *bim);
-
-ArrayList *  bim_tools_get_zones_list    (void);
-ArrayList *  bim_tools_get_transits_list (void);
+double  bim_tools_get_area_bim   (const bim_t *bim);
 
 void bim_tools_print_element(const bim_zone_t *zone);
 

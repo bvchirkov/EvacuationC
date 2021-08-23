@@ -18,7 +18,7 @@
 #include "math.h"
 #include "bim_graph.h"
 
-void    evac_def_modeling_step (const bim_object_t *bim, uint64_t bim_element_count);
+void    evac_def_modeling_step (const bim_t *bim, uint64_t bim_element_count);
 void    evac_bim_ext_init      (const ArrayList *zones, const ArrayList *transits);
 void    evac_moving_step       (const bim_graph *graph, const ArrayList *zones, const ArrayList *transits);
 

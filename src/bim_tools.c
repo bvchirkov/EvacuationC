@@ -17,30 +17,38 @@
 
 
 void        _list_sort      (ArrayList *list, ArrayListCompareFunc compare_func);
-int32_t     _zone_id_cmp    (const ArrayListValue value1, const ArrayListValue value2);
+int32_t     _id_cmp         (const ArrayListValue value1, const ArrayListValue value2);
 bim_zone_t* _outside_init   (const bim_json_object_t *bim_json);
+int         _calculate_transits_width(ArrayList *zones, ArrayList *transits);
 
-ArrayList *zones_list = NULL;
-ArrayList *transits_list = NULL;
-bim_json_object_t *bim_json = NULL;
-
-bim_object_t* bim_tools_new(const char* file)
+bim_t* bim_tools_new(const char* file)
 {
-    bim_json = bim_json_new(file);
-    zones_list = arraylist_new(1);
-    transits_list = arraylist_new(1);
+    bim_json_object_t *bim_json = bim_json_new(file);
+    ArrayList *zones_list = arraylist_new(1);
+    ArrayList *transits_list = arraylist_new(1);
 
-    bim_object_t *bim = (bim_object_t *)malloc(sizeof (bim_object_t));
-    bim->name = strdup(bim_json->name);
-    bim->levels_count = bim_json->levels_count;
-    bim->outside = _outside_init(bim_json);
-    arraylist_append(zones_list, bim->outside);
+    bim_t *bim = (bim_t *)malloc(sizeof (bim_t));
+    bim->transits = transits_list;
+    bim->zones = zones_list;
+    bim->json = bim_json;
 
-    bim_level_t *level_ext = (bim_level_t *) malloc(sizeof (bim_level_t) * bim->levels_count);
+    bim_object_t *bim_object = (bim_object_t *)malloc(sizeof (bim_object_t));
+    if (!bim_object)
+    {
+        free(bim);
+        return NULL;
+    }
+    bim->object = bim_object;
+    bim_object->name = strdup(bim_json->name);
+    bim_object->levels_count = bim_json->levels_count;
+    bim_object->outside = _outside_init(bim_json);
+    arraylist_append(zones_list, bim_object->outside);
+
+    bim_level_t *level_ext = (bim_level_t *) malloc(sizeof (bim_level_t) * bim_object->levels_count);
     bim_json_level_t *level = bim_json->levels;
-    bim->levels = level_ext;
+    bim_object->levels = level_ext;
 
-    for(size_t i = 0; i < bim->levels_count; i++, level_ext++, level++)
+    for(size_t i = 0; i < bim_object->levels_count; i++, level_ext++, level++)
     {
         level_ext->name = strdup(level->name);
         level_ext->z_level = level->z_level;
@@ -70,7 +78,7 @@ bim_object_t* bim_tools_new(const char* file)
                 transits[transit_count].is_blocked = false;
                 transits[transit_count].is_visited = false;
                 transits[transit_count].num_of_people = 0;
-                transits[transit_count].width = 0.8; //TODO write special function
+                transits[transit_count].width = -1; //TODO write special function
                 arraylist_append(transits_list, &transits[transit_count]);
                 transit_count++;
             }
@@ -89,15 +97,189 @@ bim_object_t* bim_tools_new(const char* file)
         level_ext->transit_count = transit_count;
     }
 
-    arraylist_sort(zones_list, _zone_id_cmp);
-    arraylist_sort(transits_list, _zone_id_cmp);
+    arraylist_sort(zones_list, _id_cmp);
+    arraylist_sort(transits_list, _id_cmp);
+
+    _calculate_transits_width(zones_list, transits_list);
 
     return bim;
 }
 
-bim_json_object_t* bim_tools_get_json_bim (void)
+int _find_zone_callback(ArrayListValue value1, ArrayListValue value2)
 {
-    return bim_json;
+    const bim_zone_t *zone = value1;
+    char * uuid = value2;
+
+    if (strcmp(zone->base->uuid, uuid) == 0) return 1;
+    else return 0;
+
+}
+
+line_t* _intersected_edge(const polygon_t *aPolygonElement, const line_t *aLine)
+{
+    line_t *line = (line_t *)malloc(sizeof (line_t));
+    line->p1 = (point_t *)malloc(sizeof (point_t));
+    line->p2 = (point_t *)malloc(sizeof (point_t));
+
+    uint8_t numOfIntersect = 0;
+    for (size_t i = 1; i < aPolygonElement->point_count; ++i)
+    {
+        point_t *pointElementA = &aPolygonElement->points[i-1];
+        point_t *pointElementB = &aPolygonElement->points[i];
+        line_t line_tmp = {pointElementA, pointElementB};
+        bool isIntersect = geom_tools_is_intersect_line(aLine, &line_tmp);
+        if (isIntersect)
+        {
+            line->p1 = pointElementA;
+            line->p2 = pointElementB;
+            numOfIntersect++;
+        }
+    }
+
+    if (numOfIntersect != 1)
+        fprintf(stderr, "[func: %s() | line: %u] :: Ошибка геометрии. Проверьте правильность ввода дверей и вирутальных проемов.\n", __func__, __LINE__);
+
+    return line;
+}
+
+double _width_door_way(const polygon_t *zone1, const polygon_t *zone2, const multiline_t *edge1, const multiline_t *edge2)
+{
+    /*
+     * Возможные варианты стыковки помещений, которые соединены проемом
+     * Код ниже определяет область их пересечения
+       +----+  +----+     +----+
+            |  |               | +----+
+            |  |               | |
+            |  |               | |
+       +----+  +----+          | |
+                               | +----+
+       +----+             +----+
+            |  +----+
+            |  |          +----+ +----+
+            |  |               | |
+       +----+  |               | |
+               +----+          | +----+
+                          +----+
+     *************************************************************************
+     * 1. Определить грани помещения, которые пересекает короткая сторона проема
+     * 2. Вычислить среднее проекций граней друг на друга
+     */
+
+    point_t l1p1 = edge1->points[0];
+    point_t l1p2 = edge2->points[0];
+    double length1 = geom_tools_length_side(&l1p1, &l1p2);
+
+    point_t l2p1 = edge1->points[0];
+    point_t l2p2 = edge2->points[1];
+    double length2 = geom_tools_length_side(&l2p1, &l2p2);
+
+    // Короткая линия проема, которая пересекает оба помещения
+    line_t dline = {NULL, NULL};
+    if (length1 >= length2)
+    {
+        dline.p1 = &l2p1;
+        dline.p2 = &l2p2;
+    } else
+    {
+        dline.p1 = &l1p1;
+        dline.p2 = &l1p2;
+    }
+
+    // Линии, которые находятся друг напротив друга и связаны проемом
+    line_t *edgeElementA = _intersected_edge(zone1, &dline);
+    line_t *edgeElementB = _intersected_edge(zone2, &dline);
+    // Поиск точек, которые являются ближайшими к отрезку edgeElement
+    // Расстояние между этими точками и является шириной проема
+    point_t *pt1 = geom_tools_nearest_point(edgeElementA->p1, edgeElementB);
+    point_t *pt2 = geom_tools_nearest_point(edgeElementA->p2, edgeElementB);
+    double d12 = geom_tools_length_side(pt1, pt2);
+
+    point_t *pt3 = geom_tools_nearest_point(edgeElementB->p1, edgeElementA);
+    point_t *pt4 = geom_tools_nearest_point(edgeElementB->p2, edgeElementA);
+    double d34 = geom_tools_length_side(pt3, pt4);
+
+    free(edgeElementA); free(edgeElementB);
+    free(pt1); free(pt2); free(pt3); free(pt4);
+
+    return (d12 + d34) / 2;
+}
+
+int _calculate_transits_width(ArrayList *zones, ArrayList *transits)
+{
+    for (size_t i = 0; i < transits->length; i++)
+    {
+        bim_transit_t *transit = transits->data[i];
+        bim_json_element_t *btransit = transit->base;
+
+        uint8_t stair_sing_counter = 0;
+        int zuuid = -1;
+        polygon_t *zpolygons = (polygon_t *)malloc(sizeof (polygon_t) * btransit->outputs_count);
+        for (size_t j = 0; j < btransit->outputs_count; j++)
+        {
+            zuuid = arraylist_index_of(zones, _find_zone_callback, btransit->outputs[j]);
+            zpolygons[j] = *((bim_zone_t *)zones->data[zuuid])->base->polygon;
+            if (((bim_zone_t *)zones->data[zuuid])->base->sign == STAIR) stair_sing_counter++;
+        }
+
+        if (zuuid == -1)
+        {
+            free(zpolygons);
+            return -1;
+        }
+
+        if (stair_sing_counter == 2) // => Межэтажный проем
+        {
+            transit->width = sqrt((geom_tools_area_polygon(&zpolygons[0]) + geom_tools_area_polygon(&zpolygons[1]))/2);
+            free(zpolygons);
+            continue;
+        }
+
+
+        multiline_t edge1 = {.point_count=0, .points=(point_t *) malloc(sizeof (point_t) * 2)};
+        multiline_t edge2 = {.point_count=0, .points=(point_t *) malloc(sizeof (point_t) * 2)};
+
+        const polygon_t *tpolygon = btransit->polygon;
+        for(size_t i = 1; i < tpolygon->point_count; ++i)
+        {
+            point_t tpoint = tpolygon->points[i];
+            uint8_t tpoint_in_zpolygon = geom_tools_is_point_in_polygon(&tpoint, &zpolygons[0]);
+            if (tpoint_in_zpolygon)
+                edge1.points[edge1.point_count++] = tpoint;
+            else
+                edge2.points[edge2.point_count++] = tpoint;
+        }
+
+        double width = -1;
+        if (edge1.point_count != 2 && edge2.point_count != 2)
+        {
+            free(edge1.points); free(edge2.points); free(zpolygons);
+            fprintf(stderr, "[func: %s() | line: %u] :: Ошибка геометрии. Невозможно вычислить ширину двери: id=%lu, uuid=%s\n",
+                    __func__, __LINE__, btransit->id, btransit->uuid);
+            return -1;
+        }
+
+        if (btransit->sign == DOOR_WAY_INT || btransit->sign == DOOR_WAY_OUT)
+        {
+            point_t l1p1 = edge1.points[0];
+            point_t l1p2 = edge1.points[1];
+            double width1 = geom_tools_length_side(&l1p1, &l1p2);
+
+            point_t l2p1 = edge2.points[0];
+            point_t l2p2 = edge2.points[1];
+            double width2 = geom_tools_length_side(&l2p1, &l2p2);
+
+            width = (width1 + width2) / 2;
+        } else if (btransit->sign == DOOR_WAY)
+        {
+            width = _width_door_way(&zpolygons[0], &zpolygons[1], &edge1, &edge2);
+        }
+
+        transit->width = width;
+
+        free(edge1.points); free(edge2.points); free(zpolygons);
+    }
+
+    return 0;
 }
 
 bim_zone_t* _outside_init(const bim_json_object_t * bim_json)
@@ -145,33 +327,34 @@ bim_zone_t* _outside_init(const bim_json_object_t * bim_json)
     return outside_zone;
 }
 
-
-bim_object_t* bim_tools_copy    (const bim_object_t* bim)
+bim_t* bim_tools_copy    (const bim_t* bim)
 {
-    return (bim_object_t *)bim;
+    return (bim_t *)bim;
 }
 
-void bim_tools_free (bim_object_t* bim)
+void bim_tools_free (bim_t* bim)
 {
-    bim_level_t *lvl_ptr = bim->levels;
-    for(size_t i = 0; i < bim->levels_count; i++, lvl_ptr++)
+    bim_object_t *bim_obj = bim->object;
+    bim_level_t *lvl_ptr = bim_obj->levels;
+    for(size_t i = 0; i < bim_obj->levels_count; i++, lvl_ptr++)
     {
         free(lvl_ptr->zones);
         free(lvl_ptr->transits);
     }
-    free(bim->levels);
-    free(bim->outside->base->name);
-    free(bim->outside->base->outputs);
-    free(bim->outside->base->uuid);
-    free(bim->outside->base);
-    free(bim->outside);
+    free(bim_obj->levels);
+    free(bim_obj->outside->base->name);
+    free(bim_obj->outside->base->outputs);
+    free(bim_obj->outside->base->uuid);
+    free(bim_obj->outside->base);
+    free(bim_obj->outside);
 
-    free(bim->name);
+    free(bim_obj->name);
+    free(bim_obj);
+
+    bim_json_free(bim->json);
+    arraylist_free(bim->zones);
+    arraylist_free(bim->transits);
     free(bim);
-
-    bim_json_free(bim_json);
-    //arraylist_free(zones_list);
-    //arraylist_free(transits_list);
 }
 
 void bim_tools_set_people_to_zone(bim_zone_t* zone, float num_of_people)
@@ -179,30 +362,30 @@ void bim_tools_set_people_to_zone(bim_zone_t* zone, float num_of_people)
     zone->num_of_people = num_of_people;
 }
 
-double  bim_tools_get_numofpeople(const bim_object_t *bim)
+double  bim_tools_get_numofpeople(const bim_t *bim)
 {
     double numofpeople = 0;
-    for(size_t i = 0; i < bim->levels_count; i++)
+    for(size_t i = 0; i < bim->object->levels_count; i++)
     {
-        for (size_t j = 0; j < bim->levels[i].zone_count; j++)
+        for (size_t j = 0; j < bim->object->levels[i].zone_count; j++)
         {
-            const bim_zone_t *zone = &bim->levels[i].zones[j];
+            const bim_zone_t *zone = &bim->object->levels[i].zones[j];
             numofpeople += zone->num_of_people;
         }
     }
     return numofpeople;
 }
 
-double bim_tools_get_area_bim(const bim_object_t* bim)
+double bim_tools_get_area_bim(const bim_t* bim)
 {
     double area = 0;
-    for (size_t i = 0; i < bim->levels_count; i++)
+    for (size_t i = 0; i < bim->object->levels_count; i++)
     {
-        for (size_t j = 0; j < bim->levels[i].zone_count; j++)
+        for (size_t j = 0; j < bim->object->levels[i].zone_count; j++)
         {
-            bim_zone_t zone = bim->levels[i].zones[j];
+            bim_zone_t zone = bim->object->levels[i].zones[j];
             if (zone.base->sign == ROOM || zone.base->sign == STAIR)
-                area += bim->levels[i].zones[j].area;
+                area += bim->object->levels[i].zones[j].area;
         }
     }
     return area;
@@ -221,16 +404,6 @@ void bim_tools_print_element(const bim_zone_t *zone)
     printf("\t%s: %u\n", "Is blocked", zone->is_blocked);
 }
 
-ArrayList * bim_tools_get_zones_list(void)
-{
-    return zones_list;
-}
-
-ArrayList * bim_tools_get_transits_list(void)
-{
-    return transits_list;
-}
-
 void bim_tools_lists_delete (ArrayList ** lists)
 {
     for (size_t i = 0; i < 5; i++)
@@ -244,7 +417,7 @@ void bim_tools_lists_delete (ArrayList ** lists)
 // *******************************************************
 // -------------------------------------------------------
 
-int32_t _zone_id_cmp (const ArrayListValue value1, const ArrayListValue value2)
+int32_t _id_cmp (const ArrayListValue value1, const ArrayListValue value2)
 {
     const bim_json_element_t *e1 = value1;
     const bim_json_element_t *e2 = value2;

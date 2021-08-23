@@ -16,8 +16,11 @@
 #include "bim_polygon_tools.h"
 #include "triangle/triangle.h"
 
+/// @return Массив номеров точек треугольников
+int* _triangle_polygon(const polygon_t *polygon);
+
 // https://userpages.umbc.edu/~rostamia/cbook/triangle.html
-int* geom_tools_triangle_polygon(const polygon_t *polygon)
+int* _triangle_polygon(const polygon_t *polygon)
 {
     struct triangulateio *in = (struct triangulateio *) malloc(sizeof (struct triangulateio));
     struct triangulateio *out = (struct triangulateio *) malloc(sizeof (struct triangulateio));
@@ -50,14 +53,14 @@ int* geom_tools_triangle_polygon(const polygon_t *polygon)
     return trianglelist;
 }
 
-double geom_tools_length_side(double x1, double y1, double x2, double y2)
+double geom_tools_length_side(const point_t *p1, const point_t *p2)
 {
-    return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
+    return sqrt(pow(p1->x - p2->x, 2) + pow(p1->y - p2->y, 2));
 }
 
 double geom_tools_area_polygon(const polygon_t *polygon)
 {
-    int *trianglelist = geom_tools_triangle_polygon(polygon);
+    int *trianglelist = _triangle_polygon(polygon);
 
     //Вычисляем площадь по формуле S=(p(p-ab)(p-bc)(p-ca))^0.5;
     //p=(ab+bc+ca)0.5
@@ -67,9 +70,9 @@ double geom_tools_area_polygon(const polygon_t *polygon)
         const point_t *a = &polygon->points[trianglelist[i+0]];
         const point_t *b = &polygon->points[trianglelist[i+1]];
         const point_t *c = &polygon->points[trianglelist[i+2]];
-        double ab = geom_tools_length_side(a->x, a->y, b->x, b->y);
-        double bc = geom_tools_length_side(b->x, b->y, c->x, c->y);
-        double ca = geom_tools_length_side(c->x, c->y, a->x, a->y);
+        double ab = geom_tools_length_side(a, b);
+        double bc = geom_tools_length_side(b, c);
+        double ca = geom_tools_length_side(c, a);
         double p = (ab + bc + ca) * 0.5;
         areaElement += sqrt(p * (p - ab) * (p - bc) * (p - ca));
     }
@@ -77,3 +80,118 @@ double geom_tools_area_polygon(const polygon_t *polygon)
     free(trianglelist);
     return areaElement;
 }
+
+int _where_point(double aAx, double aAy, double aBx, double aBy, double aPx, double aPy)
+{
+    double s = (aBx - aAx) * (aPy - aAy) - (aBy - aAy) * (aPx - aAx);
+    if (s > 0) return 1;        // Точка слева от вектора AB
+    else if(s < 0) return -1;   // Точка справа от вектора AB
+    else return 0;              // Точка на векторе, прямо по вектору или сзади вектора
+}
+
+uint8_t _is_point_in_triangle(double aAx, double aAy, double aBx, double aBy, double aCx, double aCy, double aPx, double aPy)
+{
+    int q1 = _where_point(aAx, aAy, aBx, aBy, aPx, aPy);
+    int q2 = _where_point(aBx, aBy, aCx, aCy, aPx, aPy);
+    int q3 = _where_point(aCx, aCy, aAx, aAy, aPx, aPy);
+
+    return (q1 >= 0 && q2 >= 0 && q3 >= 0);
+}
+
+uint8_t geom_tools_is_point_in_polygon(const point_t *point, const polygon_t *polygon)
+{
+    int* trianglelist = _triangle_polygon(polygon);
+    uint8_t result = 0;
+    for (size_t i = 0; i < polygon->point_count; i += 3)
+    {
+        const point_t *a = &polygon->points[trianglelist[i+0]];
+        const point_t *b = &polygon->points[trianglelist[i+1]];
+        const point_t *c = &polygon->points[trianglelist[i+2]];
+        result = _is_point_in_triangle(a->x, a->y, b->x, b->y, c->x, c->y, point->x, point->y);
+        if (result == 1) break;
+    }
+
+    return result;
+}
+
+// signed area of a triangle
+double _area(const point_t *p1, const point_t *p2, const point_t *p3)
+{
+    return (p2->x - p1->x) * (p3->y - p1->y) - (p2->y - p1->y) * (p3->x - p1->x);
+}
+
+void _fswap(double *v1, double *v2)
+{
+    double tmp_v1 = *v1;
+    *v1 = *v2;
+    *v2 = tmp_v1;
+}
+
+// https://e-maxx.ru/algo/segments_intersection_checking
+uint8_t _intersect_1(double a, double b, double c, double d)
+{
+    if (a > b) _fswap(&a, &b);
+    if (c > d) _fswap(&c, &d);
+    return fmax(a, c) <= fmin(b, d);
+}
+
+// check if two segments intersect
+uint8_t geom_tools_is_intersect_line(const line_t *l1, const line_t *l2)
+{
+    const point_t *p1 = l1->p1;
+    const point_t *p2 = l1->p2;
+    const point_t *p3 = l2->p1;
+    const point_t *p4 = l2->p2;
+    return _intersect_1(p1->x, p2->x, p3->x, p4->x)
+        && _intersect_1(p1->y, p2->y, p3->y, p4->y)
+        && _area(p1, p2, p3) * _area(p1, p2, p4) <= 0
+        && _area(p3, p4, p1) * _area(p3, p4, p2) <= 0;
+}
+
+// Определение точки на линии, расстояние до которой от заданной точки является минимальным из существующих
+point_t *geom_tools_nearest_point(const point_t *point_start, const line_t *line)
+{
+    point_t a = {line->p1->x, line->p1->y};
+    point_t b = {line->p2->x, line->p2->y};
+
+    if (geom_tools_length_side(&a, &b) < 1e-9)
+    {
+        return line->p1;
+    }
+
+    double A = point_start->x - a.x;
+    double B = point_start->y - a.y;
+    double C = b.x - a.x;
+    double D = b.y - a.y;
+
+    double dot = A * C + B * D;
+    double len_sq = C * C + D * D;
+    double param = -1;
+
+    if (len_sq != 0)
+    {
+        param = dot / len_sq;
+    }
+
+    double xx, yy;
+
+    if (param < 0)
+    {
+        xx = a.x;
+        yy = a.y;
+    } else if (param > 1)
+    {
+        xx = b.x;
+        yy = b.y;
+    } else
+    {
+        xx = a.x + param * C;
+        yy = a.y + param * D;
+    }
+
+    point_t *point_end = (point_t *) malloc(sizeof (point_t));
+    point_end->x = xx;
+    point_end->y = yy;
+    return point_end;
+}
+

@@ -50,14 +50,14 @@ void evac_time_reset (void)
     _evac_time = 0;
 }
 
-void evac_def_modeling_step(const bim_object_t *bim, uint64_t bim_element_count)
+void evac_def_modeling_step(const bim_t *bim, uint64_t bim_element_count)
 {
     double numofpeople = 0;
-    for(size_t i = 0; i < bim->levels_count; i++)
+    for(size_t i = 0; i < bim->object->levels_count; i++)
     {
-        for (size_t j = 0; j < bim->levels[i].zone_count; j++)
+        for (size_t j = 0; j < bim->object->levels[i].zone_count; j++)
         {
-            const bim_zone_t *zone = &bim->levels[i].zones[j];
+            const bim_zone_t *zone = &bim->object->levels[i].zones[j];
             numofpeople += zone->area;
         }
     }

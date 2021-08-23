@@ -53,8 +53,8 @@ struct edge {
     uint64_t id;
 };
 
-bim_graph*  bim_graph_new    (const ArrayList *zones, const ArrayList *transits);
+bim_graph*  bim_graph_new    (const bim_t *bim);
 void        bim_graph_print  (const bim_graph *graph);
-void        bim_graph_free (bim_graph* graph);
+void        bim_graph_free   (bim_graph* graph);
 
 #endif //BIM_GRAPH_H

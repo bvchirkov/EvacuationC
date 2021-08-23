@@ -16,9 +16,9 @@
 #ifndef BIM_POLYGON_TOOLS_H
 #define BIM_POLYGON_TOOLS_H
 
-#include "stdlib.h"
-#include "stdint.h"
-#include "math.h"
+#include <stdlib.h>
+#include <stdint.h>
+#include <math.h>
 
 typedef struct
 {
@@ -28,13 +28,26 @@ typedef struct
 
 typedef struct
 {
+    point_t *p1;
+    point_t *p2;
+} line_t;
+
+typedef struct
+{
+    uint64_t point_count;
+    point_t *points;
+} multiline_t;
+
+typedef struct
+{
     uint64_t point_count;
     point_t *points;
 } polygon_t;
 
-
-double  geom_tools_length_side         (double x1, double y1, double x2, double y2);
 double  geom_tools_area_polygon        (const polygon_t *polygon);
-int*    geom_tools_triangle_polygon    (const polygon_t *polygon);
+uint8_t geom_tools_is_point_in_polygon (const point_t *point, const polygon_t *polygon);
+uint8_t geom_tools_is_intersect_line   (const line_t *l1, const line_t *l2);
+double  geom_tools_length_side         (const point_t *p1, const point_t *p2);
+point_t *geom_tools_nearest_point      (const point_t *point_start, const line_t *line);
 
 #endif //BIM_POLYGON_TOOLS_H

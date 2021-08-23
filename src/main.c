@@ -43,10 +43,9 @@ int main (int argc, char** argv)
         return 1;
     }
 
-    bim_object_t *bim = bim_tools_new(argv[1]);
+    bim_t *bim = bim_tools_new(argv[1]);
 
-    ArrayList *zones = bim_tools_get_zones_list();
-    ArrayList *transits = bim_tools_get_transits_list();
+    ArrayList * const zones = bim->zones;
     for (size_t i = 0; i < zones->length; i++)
     {
         bim_zone_t *zone = zones->data[i];
@@ -54,15 +53,23 @@ int main (int argc, char** argv)
             bim_tools_set_people_to_zone(zone, (zone->area * 0.2));
         //printf("Element id::name: %lu[%lu]::%-32s::%.2f\n",  zone->base->id, i, zone->base->name, zone->num_of_people);
     }
+
+    ArrayList * const transits = bim->transits;
+    for (size_t i = 0; i < transits->length; i++)
+    {
+        bim_transit_t *transit = transits->data[i];
+        printf("Element id::name: %lu[%lu]::%-32s::%.2f\n",  transit->base->id, i, transit->base->name, transit->width);
+    }
+
     printf("Файл описания объекта: %s\n", argv[1]);
-    printf("Название объекта: %s\n", bim->name);
+    printf("Название объекта: %s\n", bim->object->name);
     printf("Площадь здания: %.2f m^2\n", bim_tools_get_area_bim(bim));
-    printf("Количество этажей: %i\n", bim->levels_count);
+    printf("Количество этажей: %i\n", bim->object->levels_count);
     printf("Количество помещений: %i\n", zones->length);
     printf("Количество дверей: %i\n", transits->length);
     printf("Количество человек в здании: %.2f чел.\n", bim_tools_get_numofpeople(bim));
 
-    bim_graph *graph = bim_graph_new(zones, transits);
+    bim_graph *graph = bim_graph_new(bim);
     //bim_graph_print(graph);
 
     evac_def_modeling_step(bim, zones->length);
@@ -95,10 +102,7 @@ int main (int argc, char** argv)
     printf("Длительность эвакуации: %.2f с., %.2f мин.\n", evac_time_s(), evac_time_m());
     printf("---------------------------------------\n");
 
-    arraylist_free(zones);
-    arraylist_free(transits);
     bim_graph_free(graph);
     bim_tools_free(bim);
-
     return 0;
 }
