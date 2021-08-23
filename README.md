@@ -1,6 +1,6 @@
 # EvacuationC
 
-**EvacuationC** -- программа моделирования движения людей в здании
+**EvacuationC** -- программа моделирования движения людей в здании.
 
 
 # Сборка
@@ -28,6 +28,8 @@ cmake -S  . -B build/ && cmake --build build/
 Готовый к запуску файл расположен в дирректории `build/` -- `EvacuationC`
 
 # Запуск
+
+Программе необходимо передать файл описания здания, выполненный в QGIS 2.18 с использованием плагина [PlanCreator](https://github.com/bvchirkov/PlanCreator)
 
 ``` bash
 cd build
