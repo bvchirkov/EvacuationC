@@ -1,9 +1,10 @@
 add_subdirectory(bim)
 
 add_library(bim-tools SHARED
-    bim_tools.c  bim_tools.h
-    bim_graph.c  bim_graph.h
-    bim_evac.c   bim_evac.h
+    bim_tools.c         bim_tools.h
+    bim_graph.c         bim_graph.h
+    bim_evac.c          bim_evac.h
+    bim_polygon_tools.c bim_polygon_tools.h
     )
 
 target_include_directories(bim-tools

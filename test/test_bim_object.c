@@ -47,14 +47,14 @@ TEST_CASE one_zone_one_exit(void)
     assert(element1.z_level == 0);
     assert(element1.id == 0);
     assert(element1.numofpeople == 0);
-    assert(element1.polygon->points_count == 5);
+    assert(element1.polygon->point_count == 5);
 
     // zone
     assert(element2.outputs_count == 1);
     assert(element2.size_z == 3);
     assert(element2.z_level == 0);
     assert(element2.numofpeople == 15);
-    assert(element2.polygon->points_count == 5);
+    assert(element2.polygon->point_count == 5);
 
     // adjacency
     assert(strcmp(element1.uuid, element2.outputs[0]) == 0);
@@ -86,7 +86,7 @@ TEST_CASE three_zone_three_transit(void)
 
             assert(element.size_z == 3);
             assert(element.z_level == 0);
-            assert(element.polygon->points_count == 5);
+            assert(element.polygon->point_count == 5);
         }
         else if (element.sign == DOOR_WAY || element.sign == DOOR_WAY_INT)
         {
@@ -94,7 +94,7 @@ TEST_CASE three_zone_three_transit(void)
             assert(element.size_z == 2);
             assert(element.z_level == 0);
             assert(element.numofpeople == 0);
-            assert(element.polygon->points_count == 5);
+            assert(element.polygon->point_count == 5);
         }
     }
 

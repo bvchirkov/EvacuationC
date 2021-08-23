@@ -30,6 +30,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
+#include "../bim_polygon_tools.h"
 
 /// Количество символов в UUID
 #define UUID_SIZE 36
@@ -48,20 +49,6 @@ typedef enum
     UNDEFINDED      ///< Указывает, что тип элемента не определен
 } bim_element_sign_t;
 
-/// Структура, описывающая точку полигона
-typedef struct
-{
-    double x;
-    double y;
-} bim_geometry_point_t;
-
-/// Структура, описывающая полигон элемента
-typedef struct
-{
-    uint64_t              points_count; ///< Количство точек в полигоне
-    bim_geometry_point_t *points;       ///< [JSON] Массив точек, формирующих полигон
-} bim_geometry_polygon_t;
-
 /// Структура, описывающая элемент
 typedef struct
 {
@@ -72,7 +59,7 @@ typedef struct
     float                   z_level;        ///< Уровень, на котором находится элемент
     uint16_t                numofpeople;    ///< [JSON] Количество людей в элементе
     bim_element_sign_t      sign;           ///< [JSON] Тип элемента
-    bim_geometry_polygon_t  *polygon;       ///< [JSON] Полигон элемента
+    polygon_t               *polygon;       ///< [JSON] Полигон элемента
     uint8_t                 outputs_count;  ///< Количество связанных с текущим элементов
     char                    **outputs;      ///< [JSON] Массив UUID элементов, которые являются соседними
 } bim_json_element_t;

@@ -36,7 +36,7 @@ bim_level_element_t, и функции для работы с моделью з�
 #include <assert.h>
 
 #include "bim/bim_json_object.h"
-#include "triangle/triangle.h"
+#include "bim_polygon_tools.h"
 #include "arraylist/arraylist.h" ///< https://github.com/fragglet/c-algorithms
 
 /// Структура, расширяющая элемент DOOR_*

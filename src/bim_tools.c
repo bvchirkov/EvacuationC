@@ -16,12 +16,9 @@
 #include "bim_tools.h"
 
 
-void        _bim_tools_list_sort            (ArrayList *list, ArrayListCompareFunc compare_func);
-double      _bim_tools_length_side          (const bim_geometry_point_t *p1, const bim_geometry_point_t *p2);
-int32_t*    _bim_tools_triangle_polygon     (const bim_geometry_polygon_t *element_polygon);
-int32_t     _bim_tools_element_cmp          (ArrayListValue value1, ArrayListValue value2);
-double      _bim_tools_get_area_element     (const bim_geometry_polygon_t *element);
-bim_zone_t* _outside_init                   (const bim_json_object_t *bim_json);
+void        _list_sort      (ArrayList *list, ArrayListCompareFunc compare_func);
+int32_t     _zone_id_cmp    (const ArrayListValue value1, const ArrayListValue value2);
+bim_zone_t* _outside_init   (const bim_json_object_t *bim_json);
 
 ArrayList *zones_list = NULL;
 ArrayList *transits_list = NULL;
@@ -62,7 +59,7 @@ bim_object_t* bim_tools_new(const char* file)
                 zones[zone_count].is_blocked = false;
                 zones[zone_count].is_visited = false;
                 zones[zone_count].potential = __FLT_MAX__;
-                zones[zone_count].area = _bim_tools_get_area_element(element->polygon);
+                zones[zone_count].area = geom_tools_area_polygon(element->polygon);
                 zones[zone_count].num_of_people = element->numofpeople;
                 arraylist_append(zones_list, &zones[zone_count]);
                 zone_count++;
@@ -92,8 +89,8 @@ bim_object_t* bim_tools_new(const char* file)
         level_ext->transit_count = transit_count;
     }
 
-    arraylist_sort(zones_list, _bim_tools_element_cmp);
-    arraylist_sort(transits_list, _bim_tools_element_cmp);
+    arraylist_sort(zones_list, _zone_id_cmp);
+    arraylist_sort(transits_list, _zone_id_cmp);
 
     return bim;
 }
@@ -173,6 +170,8 @@ void bim_tools_free (bim_object_t* bim)
     free(bim);
 
     bim_json_free(bim_json);
+    //arraylist_free(zones_list);
+    //arraylist_free(transits_list);
 }
 
 void bim_tools_set_people_to_zone(bim_zone_t* zone, float num_of_people)
@@ -194,7 +193,7 @@ double  bim_tools_get_numofpeople(const bim_object_t *bim)
     return numofpeople;
 }
 
-double bim_tools_get_area_bim           (const bim_object_t* bim)
+double bim_tools_get_area_bim(const bim_object_t* bim)
 {
     double area = 0;
     for (size_t i = 0; i < bim->levels_count; i++)
@@ -222,7 +221,6 @@ void bim_tools_print_element(const bim_zone_t *zone)
     printf("\t%s: %u\n", "Is blocked", zone->is_blocked);
 }
 
-
 ArrayList * bim_tools_get_zones_list(void)
 {
     return zones_list;
@@ -246,73 +244,11 @@ void bim_tools_lists_delete (ArrayList ** lists)
 // *******************************************************
 // -------------------------------------------------------
 
-double _bim_tools_get_area_element   (const bim_geometry_polygon_t *polygon)
-{
-    int *trianglelist = _bim_tools_triangle_polygon(polygon);
-
-    //Вычисляем площадь по формуле S=(p(p-ab)(p-bc)(p-ca))^0.5;
-    //p=(ab+bc+ca)0.5
-    double areaElement = 0;
-    for (size_t i = 0; i < polygon->points_count + 1; i+=3)
-    {
-        const bim_geometry_point_t *a = &polygon->points[trianglelist[i+0]];
-        const bim_geometry_point_t *b = &polygon->points[trianglelist[i+1]];
-        const bim_geometry_point_t *c = &polygon->points[trianglelist[i+2]];
-        double ab = _bim_tools_length_side(a, b);
-        double bc = _bim_tools_length_side(b, c);
-        double ca = _bim_tools_length_side(c, a);
-        double p = (ab + bc + ca) * 0.5;
-        areaElement += sqrt(p * (p - ab) * (p - bc) * (p - ca));
-    }
-
-    free(trianglelist);
-    return areaElement;
-}
-
-int32_t _bim_tools_element_cmp (ArrayListValue value1, ArrayListValue value2)
+int32_t _zone_id_cmp (const ArrayListValue value1, const ArrayListValue value2)
 {
     const bim_json_element_t *e1 = value1;
     const bim_json_element_t *e2 = value2;
     if (e1->id > e2->id) return 1;
     else if (e1->id < e2->id) return -1;
     else return 0;
-}
-
-// https://userpages.umbc.edu/~rostamia/cbook/triangle.html
-int* _bim_tools_triangle_polygon(const bim_geometry_polygon_t *element_polygon)
-{
-    struct triangulateio *in = (struct triangulateio *) malloc(sizeof (struct triangulateio));
-    struct triangulateio *out = (struct triangulateio *) malloc(sizeof (struct triangulateio));
-    const uint8_t points_count = element_polygon->points_count * 2;
-    REAL pointlist[points_count];
-    const bim_geometry_point_t *points = element_polygon->points;
-    for (size_t i = 0; i < points_count; points++)
-    {
-        pointlist[i++] = points->x;
-        pointlist[i++] = points->y;
-    }
-
-    in->pointlist = pointlist;
-    in->numberofpoints = element_polygon->points_count;
-    in->pointattributelist = NULL;
-    in->pointmarkerlist = NULL;
-    in->numberofpointattributes = 0;
-
-    out->pointlist = NULL;
-    out->pointmarkerlist = NULL;
-    int *trianglelist = (int *) malloc(in->numberofpoints);
-    out->trianglelist = trianglelist;  // Индексы точек треугольников против часовой стрелки
-
-    char triswitches[2] = "zQ";
-    triangulate(triswitches, in, out, NULL);
-
-    free(in);
-    free(out);
-
-    return trianglelist;
-}
-
-double _bim_tools_length_side(const bim_geometry_point_t *p1, const bim_geometry_point_t *p2)
-{
-    return sqrt(pow(p1->x - p2->x, 2) + pow(p1->y - p2->y, 2));
 }

@@ -119,9 +119,9 @@ bim_json_object_t*  bim_json_new   (const char* filename)
             json_object *xy0 = json_object_array_get_idx(xy, 0);
             json_object *points = json_object_object_get(xy0, "points");
             uint8_t points_count = json_object_array_length(points);
-            bim_geometry_polygon_t *bim_polygon = (bim_geometry_polygon_t*)malloc(sizeof (bim_geometry_polygon_t));
-            bim_polygon->points_count = points_count;
-            bim_geometry_point_t *bim_points = (bim_geometry_point_t*)malloc(sizeof (bim_geometry_point_t) * points_count);
+            polygon_t *bim_polygon = (polygon_t*)malloc(sizeof (polygon_t));
+            bim_polygon->point_count = points_count;
+            point_t *bim_points = (point_t*)malloc(sizeof (point_t) * points_count);
             bim_polygon->points = bim_points;
             bim_elements->polygon = bim_polygon;
             json_object *temp4;
