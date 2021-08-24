@@ -15,17 +15,17 @@
 
 #include <string.h>
 #include <assert.h>
-#include "bim/bim_json_object.h"
+#include "bim_json_object.h"
 
 #define TEST_CASE       void
 #define SUCCESS         "ОК"
 #define FAIL            "FAIL"
-#define LOG_INFO(str)   fprintf(stdout, "[%-5s()] :: %s\n", __func__, str)
+#define __LOG_INFO__(str)   fprintf(stdout, "[%-5s()] :: %s\n", __func__, str)
 
 TEST_CASE one_zone_one_exit(void)
 {
     const char * filename = ROOT_PATH"/one_zone_one_exit.json";
-    LOG_INFO(filename);
+    __LOG_INFO__(filename);
     bim_json_object_t *bim_json = bim_json_new(filename);
     assert(bim_json->levels_count == 1);
 
@@ -60,13 +60,13 @@ TEST_CASE one_zone_one_exit(void)
     assert(strcmp(element1.uuid, element2.outputs[0]) == 0);
     assert(strcmp(element2.uuid, element1.outputs[0]) == 0);
 
-    LOG_INFO(SUCCESS);
+    __LOG_INFO__(SUCCESS);
 }
 
 TEST_CASE three_zone_three_transit(void)
 {
     const char * filename = ROOT_PATH"/three_zone_three_transit.json";
-    LOG_INFO(filename);
+    __LOG_INFO__(filename);
     bim_json_object_t *bim_json = bim_json_new(filename);
     assert(bim_json->levels_count == 1);
 
@@ -98,13 +98,13 @@ TEST_CASE three_zone_three_transit(void)
         }
     }
 
-    LOG_INFO(SUCCESS);
+    __LOG_INFO__(SUCCESS);
 }
 
 TEST_CASE two_levels(void)
 {
     const char * filename = ROOT_PATH"/two_levels.json";
-    LOG_INFO(filename);
+    __LOG_INFO__(filename);
     bim_json_object_t *bim_json = bim_json_new(filename);
     assert(bim_json->levels_count == 2);
 
@@ -128,7 +128,7 @@ TEST_CASE two_levels(void)
         }
     }
 
-    LOG_INFO(SUCCESS);
+    __LOG_INFO__(SUCCESS);
 }
 
 int main (void)

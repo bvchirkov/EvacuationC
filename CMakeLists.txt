@@ -2,9 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(EvacuationC LANGUAGES C)
 
-add_subdirectory(src/)
 add_subdirectory(thirdparty/)
-add_subdirectory(test/)
+
 set(CMAKE_VERBOSE_MAKEFILE TRUE CACHE STRING "" FORCE)
 
 set(CMAKE_C_COMPILER        gcc-10  CACHE STRING "" FORCE)
@@ -20,16 +19,31 @@ set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "" FORCE)
 message(STATUS "[EvacuationC]::CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 add_executable(${PROJECT_NAME}
+    src/bim_tools.c         src/bim_tools.h
+    src/bim_graph.c         src/bim_graph.h
+    src/bim_evac.c          src/bim_evac.h
+    src/bim_polygon_tools.c src/bim_polygon_tools.h
+    src/bim_json_object.c   src/bim_json_object.h
     src/main.c
+    )
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        ./thirdparty/
+        ./thirdparty/c-logger/src
     )
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        bim-tools
-        bim-json
+        logger
+        triangle
+        arraylist
+        json-c
+        m
     )
 
-target_compile_definitions(${PROJECT_NAME}
-    PRIVATE
-        ROOT_PATH="${CMAKE_SOURCE_DIR}/res"
-    )
+### Test
+if(build_tests)
+    enable_testing()
+    add_subdirectory(test)
+endif()

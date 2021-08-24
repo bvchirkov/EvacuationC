@@ -15,10 +15,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "bim/bim_json_object.h"
-#include "bim_tools.h"
 #include "bim_graph.h"
 #include "bim_evac.h"
+#include "logger.h"
 
 void print_info(const double time, const ArrayList * zones, const double numofpeople)
 {
@@ -33,6 +32,9 @@ void print_info(const double time, const ArrayList * zones, const double numofpe
 
 int main (int argc, char** argv)
 {
+    logger_initConsoleLogger(stdout);
+//    logger_initFileLogger("log.txt", 0, 0);
+
     if (argc == 1)
     {
         printf("Укажите путь к файлу с описанием здания\n");
@@ -57,8 +59,8 @@ int main (int argc, char** argv)
     ArrayList * const transits = bim->transits;
     for (size_t i = 0; i < transits->length; i++)
     {
-        bim_transit_t *transit = transits->data[i];
-        printf("Element id::name: %lu[%lu]::%-32s::%.2f\n",  transit->base->id, i, transit->base->name, transit->width);
+        //bim_transit_t *transit = transits->data[i];
+        //printf("Element id::name: %lu[%lu]::%-32s::%.2f\n",  transit->base->id, i, transit->base->name, transit->width);
     }
 
     printf("Файл описания объекта: %s\n", argv[1]);

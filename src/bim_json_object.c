@@ -14,14 +14,10 @@
  */
 
 #include "bim_json_object.h"
-#include <json-c/json.h>
+#include "json-c/json.h"        ///< https://github.com/rbtylee/tutorial-jsonc/blob/master/tutorial/index.md
 
 #define streq(str1, str2) strcmp(str1, str2) == 0
 
-void _element_delete(bim_json_element_t *element);
-void _level_delete  (bim_json_level_t   *level);
-
-//https://github.com/rbtylee/tutorial-jsonc/blob/master/tutorial/index.md
 bim_json_object_t*  bim_json_new   (const char* filename)
 {
     json_object *root;
@@ -143,25 +139,11 @@ bim_json_object_t*  bim_json_new   (const char* filename)
 
 bim_json_object_t* bim_json_copy (const bim_json_object_t* bim_object)
 {
+    // TODO
     return (bim_json_object_t *)bim_object;
 }
 
-void bim_json_free (bim_json_object_t* bim)
-{
-    bim_json_level_t *levels_ptr = bim->levels;
-    for (uint8_t i = 0; i < bim->levels_count; i++, levels_ptr++)
-    {
-        _level_delete(levels_ptr);
-    }
-    free(bim->levels);
-    free(bim->address.add_info);
-    free(bim->address.city);
-    free(bim->address.street_address);
-    free(bim->name);
-    free(bim);
-}
-
-void _element_delete(bim_json_element_t *element)
+static void _element_delete(bim_json_element_t *element)
 {
     free(element->uuid);
     free(element->name);
@@ -178,7 +160,7 @@ void _element_delete(bim_json_element_t *element)
     }
 }
 
-void _level_delete(bim_json_level_t *level)
+static void _level_delete(bim_json_level_t *level)
 {
     bim_json_element_t *elements_ptr = level->elements;
     for (uint8_t j = 0; j < level->elements_count; j++, elements_ptr++)
@@ -187,4 +169,19 @@ void _level_delete(bim_json_level_t *level)
     }
     free(level->name);
     free(level->elements);
+}
+
+void bim_json_free (bim_json_object_t* bim)
+{
+    bim_json_level_t *levels_ptr = bim->levels;
+    for (uint8_t i = 0; i < bim->levels_count; i++, levels_ptr++)
+    {
+        _level_delete(levels_ptr);
+    }
+    free(bim->levels);
+    free(bim->address.add_info);
+    free(bim->address.city);
+    free(bim->address.street_address);
+    free(bim->name);
+    free(bim);
 }

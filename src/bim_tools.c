@@ -15,7 +15,6 @@
 
 #include "bim_tools.h"
 
-
 void        _list_sort      (ArrayList *list, ArrayListCompareFunc compare_func);
 int32_t     _id_cmp         (const ArrayListValue value1, const ArrayListValue value2);
 bim_zone_t* _outside_init   (const bim_json_object_t *bim_json);

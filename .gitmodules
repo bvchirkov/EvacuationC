@@ -1,0 +1,4 @@
+[submodule "thirdparty/json-c"]
+	path = thirdparty/json-c
+	url = git@github.com:json-c/json-c.git
+	branch = json-c-0.15-20200726
