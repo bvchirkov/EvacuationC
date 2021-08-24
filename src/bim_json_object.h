@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "bim_polygon_tools.h"
+#include "c-logger/src/logger.h"
 
 /// Количество символов в UUID
 #define UUID_SIZE 36

@@ -26,8 +26,17 @@ add_executable(${PROJECT_NAME}
     src/bim_evac.c          src/bim_evac.h
     src/bim_polygon_tools.c src/bim_polygon_tools.h
     src/bim_json_object.c   src/bim_json_object.h
+    src/bim_configure.c     src/bim_configure.h
     src/main.c
     )
+
+if (CMAKE_BUILD_TYPE MATCHES Release)
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+            NDEBUG
+            BUILD_STATIC_LIBS=OFF
+    )
+endif()
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC

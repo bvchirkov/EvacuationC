@@ -18,23 +18,17 @@
 
 #define streq(str1, str2) strcmp(str1, str2) == 0
 
-bim_json_object_t*  bim_json_new   (const char* filename)
+bim_json_object_t* bim_json_new(const char* filename)
 {
     json_object *root;
     root = json_object_from_file(filename);
     if (!root)
     {
-        fprintf(stderr, "[func: %-5s() | row: %u]::Проверьте правильность имени файла и пути: %s\n", __func__, __LINE__, filename);
+        LOG_ERROR("Не удалось прочитать файл. Проверьте правильность имени файла и пути: %s", filename);
         return NULL;
     }
 
     bim_json_object_t *bim = (bim_json_object_t*)malloc(sizeof(bim_json_object_t));
-    if (!bim)
-    {
-        json_object_put(root);
-        return NULL;
-    }
-
     json_object *name_building = json_object_object_get(root, "NameBuilding");
     bim->name = strdup(json_object_get_string(name_building));
 

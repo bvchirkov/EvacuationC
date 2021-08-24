@@ -18,11 +18,16 @@
 #include "math.h"
 #include "bim_graph.h"
 
-void    evac_def_modeling_step (const bim_t *bim, uint64_t bim_element_count);
-void    evac_bim_ext_init      (const ArrayList *zones, const ArrayList *transits);
-void    evac_moving_step       (const bim_graph *graph, const ArrayList *zones, const ArrayList *transits);
+void    evac_def_modeling_step  (const bim_t *bim, uint64_t bim_element_count);
+void    evac_bim_ext_init       (const ArrayList *zones, const ArrayList *transits);
+void    evac_moving_step        (const bim_graph *graph, const ArrayList *zones, const ArrayList *transits);
 
-double evac_time_m            (void);
-double evac_time_s            (void);
-void   evac_time_inc          (void);
-void   evac_time_reset        (void);
+double  evac_time_m             (void);
+double  evac_time_s             (void);
+void    evac_time_inc           (void);
+void    evac_time_reset         (void);
+
+void    evac_set_speed_max      (float val);
+void    evac_set_density_min    (float val);
+void    evac_set_density_max    (float val);
+void    evac_set_modeling_step  (float val);

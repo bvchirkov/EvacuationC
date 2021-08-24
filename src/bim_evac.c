@@ -15,20 +15,12 @@
 
 #include "bim_evac.h"
 
-#ifndef _MAX_SPEED_REDEFINE_
-static float MAX_SPEED = 100;
-#endif
+static float evac_speed_max = 100;
+static float evac_density_min = 0.1;
+static float evac_density_max = 5;
+static float evac_modeling_step = 0.01; //min
 
-#ifndef _DENSITY_MIN_REDEFINE_
-static float DENSITY_MIN = 0.1;
-#endif
-
-#ifndef _DENSITY_MAX_REDEFINE_
-static float DENSITY_MAX = 5;
-#endif
-
-float MODELING_STEP = 0.01; //min
-double _evac_time = 0;
+static double _evac_time = 0;
 
 double evac_time_s (void)
 {
@@ -42,7 +34,7 @@ double evac_time_m (void)
 
 void evac_time_inc (void)
 {
-    _evac_time += MODELING_STEP;
+    _evac_time += evac_modeling_step;
 }
 
 void evac_time_reset (void)
@@ -64,7 +56,7 @@ void evac_def_modeling_step(const bim_t *bim, uint64_t bim_element_count)
 
     double averageSize = numofpeople / bim_element_count;
     double hxy = sqrt(averageSize);             // характерный размер области, м
-    MODELING_STEP = (MODELING_STEP == 0) ? hxy / MAX_SPEED * 0.1 : MODELING_STEP;      // Шаг моделирования, мин
+    evac_modeling_step = (evac_modeling_step == 0) ? hxy / evac_speed_max * 0.1 : evac_modeling_step;      // Шаг моделирования, мин
 }
 
 /**
@@ -163,7 +155,7 @@ double _speed_in_element(const bim_zone_t *receiving_zone,  // принимаю�
 {
     double density_in_giver_zone = giver_zone->base->z_level / giver_zone->area;
     // По умолчанию, используется скорость движения по горизонтальной поверхности
-    double v_zone = _speed_in_room(density_in_giver_zone, MAX_SPEED);
+    double v_zone = _speed_in_room(density_in_giver_zone, evac_speed_max);
 
     double dh = receiving_zone->base->z_level - giver_zone->base->z_level;   // Разница высот зон
 
@@ -195,7 +187,7 @@ double _speed_at_exit( const bim_zone_t *receiving_zone,  // принимающ�
     // Определение скорости на выходе из отдающего помещения
     double zone_speed = _speed_in_element(receiving_zone, giver_zone);
     double density_in_giver_element = giver_zone->num_of_people / giver_zone->area;
-    double transition_speed = _speed_through_door(transit_width, density_in_giver_element, MAX_SPEED);
+    double transition_speed = _speed_through_door(transit_width, density_in_giver_element, evac_speed_max);
     double exit_speed = fmin(zone_speed, transition_speed);
 
     assert(exit_speed > 0 && " Speed less than 0 ");
@@ -211,7 +203,7 @@ double _change_numofpeople(const bim_zone_t *giver_zone,
     double P = densityInElement * speed_at_exit * transit_width;
     // Зная скорость потока, можем вычислить конкретное количество человек,
     // которое может перейти в принимющую зону (путем умножения потока на шаг моделирования)
-    return P * MODELING_STEP;
+    return P * evac_modeling_step;
 }
 
 // Подсчет потенциала
@@ -238,7 +230,7 @@ double _part_people_flow( const bim_zone_t    *receiving_zone,  // приним�
     double area_giver_zone = giver_zone->area;
     double people_in_giver_zone = giver_zone->num_of_people;
     double density_in_giver_zone= people_in_giver_zone / area_giver_zone;
-    double density_min_giver_zone = DENSITY_MIN > 0 ? DENSITY_MIN : 0.5 / area_giver_zone;
+    double density_min_giver_zone = evac_density_min > 0 ? evac_density_min : 0.5 / area_giver_zone;
 
     // Ширина перехода между зонами зависит от количества человек,
     // которое осталось в помещении. Если там слишком мало людей,
@@ -259,7 +251,7 @@ double _part_people_flow( const bim_zone_t    *receiving_zone,  // приним�
     // вместиться до достижения максимальной плотности
     // => если может вместить больше, чем может выйти, то вмещает всех вышедших,
     // иначе вмещает только возможное количество.
-    double max_numofpeople = DENSITY_MAX * receiving_zone->area;
+    double max_numofpeople = evac_density_max * receiving_zone->area;
     double capacity_reciving_zone = max_numofpeople - receiving_zone->num_of_people;
     // Такая ситуация возникает при плотности в принимающем помещении более Dmax чел./м2
     // Фактически capacity_reciving_zone < 0 означает, что помещение не может принять людей
@@ -385,4 +377,21 @@ void evac_moving_step(const bim_graph *graph, const ArrayList *zones, const Arra
     }
 
     arraylist_free(zones_to_process);
+}
+
+void evac_set_speed_max     (float val)
+{
+    evac_speed_max = val;
+}
+void evac_set_density_min   (float val)
+{
+    evac_density_min = val;
+}
+void evac_set_density_max   (float val)
+{
+    evac_density_max = val;
+}
+void evac_set_modeling_step (float val)
+{
+    evac_modeling_step = val;
 }

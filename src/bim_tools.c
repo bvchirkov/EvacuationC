@@ -23,6 +23,12 @@ int         _calculate_transits_width(ArrayList *zones, ArrayList *transits);
 bim_t* bim_tools_new(const char* file)
 {
     bim_json_object_t *bim_json = bim_json_new(file);
+    if (!bim_json)
+    {
+        LOG_ERROR("Не удалось заполнить структуру `bim_t`");
+        return NULL;
+    }
+
     ArrayList *zones_list = arraylist_new(1);
     ArrayList *transits_list = arraylist_new(1);
 
@@ -222,6 +228,8 @@ int _calculate_transits_width(ArrayList *zones, ArrayList *transits)
 
         if (zuuid == -1)
         {
+            LOG_ERROR("Не найден элемент, соединенный с переходом: id=%lu, name=%s [%s]",
+                      btransit->id, btransit->uuid, btransit->name);
             free(zpolygons);
             return -1;
         }
@@ -252,8 +260,8 @@ int _calculate_transits_width(ArrayList *zones, ArrayList *transits)
         if (edge1.point_count != 2 && edge2.point_count != 2)
         {
             free(edge1.points); free(edge2.points); free(zpolygons);
-            fprintf(stderr, "[func: %s() | line: %u] :: Ошибка геометрии. Невозможно вычислить ширину двери: id=%lu, uuid=%s\n",
-                    __func__, __LINE__, btransit->id, btransit->uuid);
+            LOG_ERROR("Невозможно вычислить ширину двери: id=%lu, name=%s [%s]",
+                      btransit->id, btransit->uuid, btransit->name);
             return -1;
         }
 
@@ -274,6 +282,12 @@ int _calculate_transits_width(ArrayList *zones, ArrayList *transits)
         }
 
         transit->width = width;
+
+        if (transit->width < 0.5)
+        {
+            LOG_WARN("Ширина проема меньше 0.5 м: id=%lu, name=%s [%s], width=%f",
+                     btransit->id, btransit->name, btransit->uuid, transit->width);
+        }
 
         free(edge1.points); free(edge2.points); free(zpolygons);
     }

@@ -13,11 +13,15 @@
  * limitations under the License.
  */
 
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "bim_graph.h"
 #include "bim_evac.h"
 #include "logger.h"
+#include "loggerconf.h"
+#include "bim_configure.h"
 
 void print_info(const double time, const ArrayList * zones, const double numofpeople)
 {
@@ -32,53 +36,86 @@ void print_info(const double time, const ArrayList * zones, const double numofpe
 
 int main (int argc, char** argv)
 {
+    // Обработка аргументов командной строки
+    char *input_file = NULL;
+    char *output_file = NULL;
+    char *logger_config_file = NULL;
+    char *bim_config_file = NULL;
+    int c;
+    while ((c = getopt (argc, argv, "c:l:o:f:")) != -1)
+    {
+        switch (c)
+        {
+        case 'c':
+            bim_config_file = optarg;
+            break;
+        case 'l':
+            logger_config_file = optarg;
+            break;
+        case 'o':
+            output_file = optarg;
+            break;
+        case 'f':
+            input_file = optarg;
+            break;
+        default:
+            abort ();
+        }
+    }
+
+    // Настройки с-logger
     logger_initConsoleLogger(stdout);
-//    logger_initFileLogger("log.txt", 0, 0);
+#ifndef NDEBUG
+    logger_setLevel(LogLevel_DEBUG);
+#else
+    logger_setLevel(LogLevel_INFO);
+#endif
+    if (logger_config_file) logger_configure(logger_config_file);
+    if (output_file) logger_initFileLogger(output_file, 0, 0);
 
-    if (argc == 1)
-    {
-        printf("Укажите путь к файлу с описанием здания\n");
-        return 1;
-    } else if (argc > 2)
-    {
-        printf("Слишком много параметров\n");
-        return 1;
-    }
+    // Настроки bim
+    if (bim_config_file) bim_configure(bim_config_file);
 
-    bim_t *bim = bim_tools_new(argv[1]);
+    // Создание структуры здания
+    bim_t *bim = bim_tools_new(input_file);
 
-    ArrayList * const zones = bim->zones;
-    for (size_t i = 0; i < zones->length; i++)
-    {
-        bim_zone_t *zone = zones->data[i];
-        if (zone->base->sign != OUTSIDE)
-            bim_tools_set_people_to_zone(zone, (zone->area * 0.2));
-        //printf("Element id::name: %lu[%lu]::%-32s::%.2f\n",  zone->base->id, i, zone->base->name, zone->num_of_people);
-    }
+    ArrayList * zones = bim->zones;
+    if (cfg_distribution.type == Distribution_UNIFORM)
+        for (size_t i = 0; i < zones->length; i++)
+        {
+            bim_zone_t *zone = zones->data[i];
+            if (zone->base->sign != OUTSIDE)
+                bim_tools_set_people_to_zone(zone, (zone->area * cfg_distribution.density));
+        }
 
-    ArrayList * const transits = bim->transits;
-    for (size_t i = 0; i < transits->length; i++)
-    {
-        //bim_transit_t *transit = transits->data[i];
-        //printf("Element id::name: %lu[%lu]::%-32s::%.2f\n",  transit->base->id, i, transit->base->name, transit->width);
-    }
+    ArrayList * transits = bim->transits;
+    if (cfg_transit.type == TransitWidth_SPECIAL)
+        for (size_t i = 0; i < transits->length; i++)
+        {
+            bim_transit_t *transit = transits->data[i];
+            if (transit->base->sign == DOOR_WAY_INT) transit->width = cfg_transit.doorway_in;
+            if (transit->base->sign == DOOR_WAY_OUT) transit->width = cfg_transit.doorway_out;
+        }
 
-    printf("Файл описания объекта: %s\n", argv[1]);
-    printf("Название объекта: %s\n", bim->object->name);
-    printf("Площадь здания: %.2f m^2\n", bim_tools_get_area_bim(bim));
-    printf("Количество этажей: %i\n", bim->object->levels_count);
-    printf("Количество помещений: %i\n", zones->length);
-    printf("Количество дверей: %i\n", transits->length);
-    printf("Количество человек в здании: %.2f чел.\n", bim_tools_get_numofpeople(bim));
+    LOG_TRACE("Файл описания объекта: %s", input_file);
+    if (bim_config_file) LOG_TRACE("Файл конфигурации сценария: %s", bim_config_file);
+    LOG_TRACE("Название объекта: %s", bim->object->name);
+    LOG_TRACE("Площадь здания: %.2f m^2", bim_tools_get_area_bim(bim));
+    LOG_TRACE("Количество этажей: %i", bim->object->levels_count);
+    LOG_TRACE("Количество помещений: %i", zones->length);
+    LOG_TRACE("Количество дверей: %i", transits->length);
+    LOG_TRACE("Количество человек в здании: %.2f чел.", bim_tools_get_numofpeople(bim));
 
     bim_graph *graph = bim_graph_new(bim);
     //bim_graph_print(graph);
 
-    evac_def_modeling_step(bim, zones->length);
-    evac_time_reset();
-//    bim_transit_t *out1 = transits->data[2];
-//    out1->is_blocked = false;
+    if (cfg_modeling.step > 0) evac_set_modeling_step(cfg_modeling.step);
+    else evac_def_modeling_step(bim, zones->length);
+    if (cfg_modeling.speed_max > 0) evac_set_speed_max(cfg_modeling.speed_max);
+    if (cfg_modeling.density_max > 0) evac_set_density_max(cfg_modeling.density_max);
+    if (cfg_modeling.density_min > 0) evac_set_density_min(cfg_modeling.density_min);
 
+    evac_time_reset();
     double remainder = 0.0; // Количество человек, которое может остаться в зд. для остановки цикла
     while(true)
     {
@@ -98,11 +135,11 @@ int main (int argc, char** argv)
         if (num_of_people <= remainder) break;
     }
 
-    printf("---------------------------------------\n");
-    printf("Количество человек в здании: %.2f чел.\n", bim_tools_get_numofpeople(bim));
-    printf("Количество человек в безопасной зоне: %.2f чел.\n", ((bim_zone_t*)zones->data[zones->length-1])->num_of_people);
-    printf("Длительность эвакуации: %.2f с., %.2f мин.\n", evac_time_s(), evac_time_m());
-    printf("---------------------------------------\n");
+    LOG_INFO("---------------------------------------");
+    LOG_INFO("Количество человек в здании: %.2f чел.", bim_tools_get_numofpeople(bim));
+    LOG_INFO("Количество человек в безопасной зоне: %.2f чел.", ((bim_zone_t*)zones->data[zones->length-1])->num_of_people);
+    LOG_INFO("Длительность эвакуации: %.2f с., %.2f мин.", evac_time_s(), evac_time_m());
+    LOG_INFO("---------------------------------------");
 
     bim_graph_free(graph);
     bim_tools_free(bim);
