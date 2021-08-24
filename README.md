@@ -34,7 +34,7 @@ git clone --recurse-submodules git@github.com:bvchirkov/EvacuationC.git
 ``` bash
 cd EvacuationC
 mkdir build
-cmake -S  . -B build/ && cmake --build build/
+cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=OFF -S  . -B build/ && cmake --build build/
 ```
 Готовый к запуску файл расположен в дирректории `build/` -- `EvacuationC`
 
