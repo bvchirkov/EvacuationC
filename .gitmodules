@@ -2,3 +2,7 @@
 	path = thirdparty/json-c
 	url = git@github.com:json-c/json-c.git
 	branch = json-c-0.15-20200726
+[submodule "thirdparty/c-logger"]
+	path = thirdparty/c-logger
+	url = git@github.com:yksz/c-logger.git
+	branch = v0.4.2
