@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(EvacuationC LANGUAGES C)
 
+option(build_tests "Build all of own tests" OFF)
 add_subdirectory(thirdparty/)
 
 set(CMAKE_VERBOSE_MAKEFILE TRUE CACHE STRING "" FORCE)
@@ -30,7 +31,6 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ./thirdparty/
-        ./thirdparty/c-logger/src
     )
 
 target_link_libraries(${PROJECT_NAME}
@@ -40,6 +40,12 @@ target_link_libraries(${PROJECT_NAME}
         arraylist
         json-c
         m
+    )
+
+## JSON-C
+target_compile_definitions(json-c
+    PUBLIC
+        BUILD_STATIC_LIBS=OFF
     )
 
 ### Test
