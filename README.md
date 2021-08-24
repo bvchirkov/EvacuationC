@@ -28,7 +28,7 @@ sudo apt install cmake gcc-10
 
 Клонируйте репозиторий
 ``` bash
-git clone --recurse-submodules git@github.com:bvchirkov/EvacuationC.git
+git clone --recurse-submodules https://github.com/bvchirkov/EvacuationC.git
 ```
 Выполните настройку окружения и сборку проекта
 ``` bash
