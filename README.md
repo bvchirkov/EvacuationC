@@ -22,15 +22,14 @@
 ## Интсрументарий
 - cmake >= 3.16
 - gcc-10
-- [json-c 0.13](https://github.com/json-c/json-c/releases/tag/json-c-0.13.1-20180305)
 
 ``` bash
-sudo apt install cmake gcc-10 libjson-c-dev
+sudo apt install cmake gcc-10
 ```
 
 Клонируйте репозиторий
 ``` bash
-git clone git@github.com:bvchirkov/EvacuationC.git
+git clone --recurse-submodules git@github.com:bvchirkov/EvacuationC.git
 ```
 Выполните настройку окружения и сборку проекта
 ``` bash
