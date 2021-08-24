@@ -10,7 +10,6 @@
 .
 ├── res             -- Ресурсы. Файлы зданий
 ├── src             -- Исходные коды программы
-│   └── bim         -- Внутренняя библиотека, отвечающая за чтение json файла и преобразование его в структуры
 ├── test            -- Тесты
 └── thirdparty      -- Библиотеки, используемые в программе
     ├── arraylist   -- Библиотека для работы с динамическим списком
@@ -22,21 +21,20 @@
 ## Интсрументарий
 - cmake >= 3.16
 - gcc-10
-- [json-c 0.13](https://github.com/json-c/json-c/releases/tag/json-c-0.13.1-20180305)
 
 ``` bash
-sudo apt install cmake gcc-10 libjson-c-dev
+sudo apt install cmake gcc-10
 ```
 
 Клонируйте репозиторий
 ``` bash
-git clone git@github.com:bvchirkov/EvacuationC.git
+git clone --recurse-submodules https://github.com/bvchirkov/EvacuationC.git
 ```
 Выполните настройку окружения и сборку проекта
 ``` bash
 cd EvacuationC
 mkdir build
-cmake -S  . -B build/ && cmake --build build/
+cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=OFF -S  . -B build/ && cmake --build build/
 ```
 Готовый к запуску файл расположен в дирректории `build/` -- `EvacuationC`
 
