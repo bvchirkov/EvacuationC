@@ -96,8 +96,8 @@ int main (int argc, char** argv)
         for (size_t i = 0; i < transits->length; i++)
         {
             bim_transit_t *transit = transits->data[i];
-            if (transit->base->sign == DOOR_WAY_INT) transit->width = cfg_transit.doorway_in;
-            if (transit->base->sign == DOOR_WAY_OUT) transit->width = cfg_transit.doorway_out;
+            if (transit->base->sign == DOOR_WAY_INT && cfg_transit.doorway_in  > 0) transit->width = cfg_transit.doorway_in;
+            if (transit->base->sign == DOOR_WAY_OUT && cfg_transit.doorway_out > 0) transit->width = cfg_transit.doorway_out;
         }
 
     LOG_TRACE("Файл описания объекта: %s", input_file);
