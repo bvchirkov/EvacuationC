@@ -34,7 +34,6 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
     target_compile_definitions(${PROJECT_NAME}
         PUBLIC
             NDEBUG
-            BUILD_STATIC_LIBS=OFF
     )
 endif()
 
