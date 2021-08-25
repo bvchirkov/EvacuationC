@@ -58,20 +58,22 @@ extern _transit         cfg_transit;
 extern _distribution    cfg_distribution;
 
 /**
- * Configure the logger with a configuration file.
- * If the filename is NULL, return without doing anything.
- *
  * The following is the configurable key/value list.
- * |key                        |value                                        |
- * |:--------------------------|:--------------------------------------------|
- * |level                      |TRACE, DEBUG, INFO, WARN, ERROR or FATAL     |
- * |autoFlush                  |A flush interval [ms] (off if interval <= 0) |
- * |logger                     |console or file                              |
- * |logger.console.output      |stdout or stderr                             |
- * |logger.file.filename       |A output filename (max length is 255 bytes)  |
- * |logger.file.maxFileSize    |1-LONG_MAX [bytes] (1 MB if size <= 0)       |
- * |logger.file.maxBackupFiles |0-255                                        |
- *
+ * ┌─────────────────────┬──────────────────────────────────────────────────┐
+ * │key                  │ value                                            │
+ * ├:--------------------┼:-------------------------------------------------┤
+ * │distribution         │ BIM or UNIFORM                                   │
+ * │distribution.density │ Плотность распределения людей, чел./м^2 (max = 9)│
+ * │                     │                                                  │
+ * │transit              │ BIM or SPECIAL                                   │
+ * │transit.doorway.in   │ Ширина внутренних переходов (двери)              │
+ * │transit.doorway.out  │ Ширина выходов из здания                         │
+ * │                     │                                                  │
+ * │modeling.step        │ Шаг моделирования                                │
+ * │modeling.speed.max   │ Максимальная скорость движения людей             │
+ * │modeling.density.min │ Минимальное значение плотности                   │
+ * │modeling.density.max │ Максимальное значение плотности                  │
+ * └─────────────────────┴──────────────────────────────────────────────────┘
  * @param[in] filename The name of the configuration file
  * @return Non-zero value upon success or 0 on error
  */

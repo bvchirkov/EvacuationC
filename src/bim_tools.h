@@ -33,7 +33,6 @@ bim_level_element_t, и функции для работы с моделью з�
 #include <math.h>
 #include <string.h>
 #include <stdbool.h>
-#include <assert.h>
 
 #include "bim_json_object.h"
 #include "bim_polygon_tools.h"

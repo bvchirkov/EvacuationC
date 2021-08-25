@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "logger.h"
 
 enum {
     kMaxFileNameLen = 256,
@@ -40,13 +41,13 @@ int bim_configure(const char* filename)
 
     if (filename == NULL)
     {
-        assert(0 && "filename must not be NULL");
+        LOG_ERROR("filename не должен быть NULL");
         return 0;
     }
 
     if ((fp = fopen(filename, "r")) == NULL)
     {
-        fprintf(stderr, "ERROR: loggerconf: Failed to open file: `%s`\n", filename);
+        LOG_ERROR("Не удалось открыть файл: `%s`", filename);
         return 0;
     }
 
@@ -54,10 +55,7 @@ int bim_configure(const char* filename)
     {
         remove_comments(line);
         trim(line);
-        if (line[0] == '\0')
-        {
-            continue;
-        }
+        if (line[0] == '\0') continue;
         parse_line(line);
     }
     fclose(fp);
@@ -97,8 +95,8 @@ static void trim(char* s)
     s[len - i] = '\0';
 }
 
-static enum cfg_distr parse_distribution(const char* s);
-static enum cfg_transit_width parse_transit_width(const char* s);
+static enum cfg_distr           parse_distribution (const char* s);
+static enum cfg_transit_width   parse_transit_width(const char* s);
 
 static void parse_line(char* line)
 {
@@ -152,7 +150,7 @@ static enum cfg_distr parse_distribution(const char* s)
     } else if (strcmp(s, "UNIFORM") == 0) {
         return Distribution_UNIFORM;
     } else {
-        fprintf(stderr, "ERROR: loggerconf: Invalid distribution: `%s`\n", s);
+        LOG_ERROR("Некорректный тип распределения: %s", s);
         return Distribution_BIM;
     }
 }
@@ -164,7 +162,7 @@ static enum cfg_transit_width parse_transit_width(const char* s)
     } else if (strcmp(s, "SPECIAL") == 0) {
         return TransitWidth_SPECIAL;
     } else {
-        fprintf(stderr, "ERROR: loggerconf: Invalid transit_width: `%s`\n", s);
+        LOG_ERROR("Некорректный тип источника ширины двери: %s", s);
         return TransitWidth_BIM;
     }
 }

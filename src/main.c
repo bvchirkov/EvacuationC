@@ -34,6 +34,10 @@ void print_info(const double time, const ArrayList * zones, const double numofpe
     printf("%8.2f\n", numofpeople);
 }
 
+static void output_head(FILE *fp, bim_t *bim);
+static void output_body(FILE *fp, bim_t *bim);
+static void output_footer(FILE *fp, bim_t *bim);
+
 int main (int argc, char** argv)
 {
     // Обработка аргументов командной строки
@@ -71,7 +75,6 @@ int main (int argc, char** argv)
     logger_setLevel(LogLevel_INFO);
 #endif
     if (logger_config_file) logger_configure(logger_config_file);
-    if (output_file) logger_initFileLogger(output_file, 0, 0);
 
     // Настроки bim
     if (bim_config_file) bim_configure(bim_config_file);
@@ -99,6 +102,7 @@ int main (int argc, char** argv)
 
     LOG_TRACE("Файл описания объекта: %s", input_file);
     if (bim_config_file) LOG_TRACE("Файл конфигурации сценария: %s", bim_config_file);
+    LOG_TRACE("Файл с детальной информацией: %s", output_file);
     LOG_TRACE("Название объекта: %s", bim->object->name);
     LOG_TRACE("Площадь здания: %.2f m^2", bim_tools_get_area_bim(bim));
     LOG_TRACE("Количество этажей: %i", bim->object->levels_count);
@@ -116,6 +120,12 @@ int main (int argc, char** argv)
     if (cfg_modeling.density_min > 0) evac_set_density_min(cfg_modeling.density_min);
 
     evac_time_reset();
+
+    // Файл с результатами
+    FILE *fp = fopen(output_file, "w+");
+    output_head(fp, bim);
+    output_body(fp, bim);
+
     double remainder = 0.0; // Количество человек, которое может остаться в зд. для остановки цикла
     while(true)
     {
@@ -131,6 +141,7 @@ int main (int argc, char** argv)
                num_of_people += zone->num_of_people;
             }
         }
+        output_body(fp, bim);
 
         if (num_of_people <= remainder) break;
     }
@@ -138,10 +149,59 @@ int main (int argc, char** argv)
     LOG_INFO("---------------------------------------");
     LOG_INFO("Количество человек в здании: %.2f чел.", bim_tools_get_numofpeople(bim));
     LOG_INFO("Количество человек в безопасной зоне: %.2f чел.", ((bim_zone_t*)zones->data[zones->length-1])->num_of_people);
-    LOG_INFO("Длительность эвакуации: %.2f с., %.2f мин.", evac_time_s(), evac_time_m());
+    LOG_INFO("Длительность эвакуации: %.2f с., %.2f мин.", evac_get_time_s(), evac_get_time_m());
     LOG_INFO("---------------------------------------");
 
+    output_footer(fp, bim);
     bim_graph_free(graph);
     bim_tools_free(bim);
     return 0;
+}
+
+static void output_head(FILE *fp, bim_t *bim)
+{
+    fprintf(fp, "t;");
+    for (size_t i = 0; i < bim->zones->length; i++)
+    {
+        bim_zone_t *zone = bim->zones->data[i];
+        fprintf(fp, "%s;%.2f;;;", zone->base->name, zone->area);
+    }
+    for (size_t i = 0; i < bim->transits->length; i++)
+    {
+        bim_transit_t *transit = bim->transits->data[i];
+        fprintf(fp, "%s;%.2f;;", transit->base->name, transit->width);
+    }
+    fprintf(fp, "\n");
+    fprintf(fp, ";");
+    for (size_t i = 0; i < bim->zones->length; i++)
+    {
+        fprintf(fp, "is_blocked;is_visited;num_of_people;potential;");
+    }
+    for (size_t i = 0; i < bim->transits->length; i++)
+    {
+        fprintf(fp, "is_blocked;is_visited;num_of_people;");
+    }
+    fprintf(fp, "\n");
+}
+
+static void output_body(FILE *fp, bim_t *bim)
+{
+    fprintf(fp, "%.2f;", evac_get_time_s());
+    for (size_t i = 0; i < bim->zones->length; i++)
+    {
+        bim_zone_t *zone = bim->zones->data[i];
+        fprintf(fp, "%u;%u;%.2f;%.2f;", zone->is_blocked, zone->is_visited, zone->num_of_people, zone->potential);
+    }
+    for (size_t i = 0; i < bim->transits->length; i++)
+    {
+        bim_transit_t *transit = bim->transits->data[i];
+        fprintf(fp, "%u;%u;%.2f;", transit->is_blocked, transit->is_visited, transit->num_of_people);
+    }
+    fprintf(fp, "\n");
+    fflush(fp);
+}
+
+static void output_footer(FILE *fp, bim_t *bim __attribute__((unused)))
+{
+    fclose(fp);
 }
