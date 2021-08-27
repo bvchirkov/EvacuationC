@@ -31,7 +31,6 @@ git clone --recurse-submodules https://github.com/bvchirkov/EvacuationC.git
 Выполните настройку окружения и сборку проекта
 ``` bash
 cd EvacuationC
-mkdir build
 cmake -S  . -B build/ && cmake --build build/
 ```
 Готовый к запуску файл расположен в дирректории `build/` -- `EvacuationC`
