@@ -1,24 +1,18 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(EvacuationC LANGUAGES C)
+project(EvacuationC LANGUAGES C VERSION 0.1.0)
 
 option(build_tests "Build all of own tests" OFF)
 
-add_subdirectory(thirdparty/)
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
-set(CMAKE_VERBOSE_MAKEFILE TRUE CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS           "-std=gnu11 -W -Wall -Wextra -Wparentheses -Wshadow -funsigned-char")
+set(CMAKE_C_FLAGS_DEBUG     "-g -O0 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELEASE   "-O3")
 
-set(CMAKE_C_COMPILER        gcc-10  CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS           "-std=gnu11 -Wall -Wextra -Wparentheses" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS_DEBUG     "-g -O0" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS_RELEASE   "-Ofast" CACHE STRING "" FORCE)
-
-if ( NOT CMAKE_BUILD_TYPE )
+if (NOT CMAKE_BUILD_TYPE)
    set(CMAKE_BUILD_TYPE Release)
 endif()
-set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "" FORCE)
-
-message(STATUS "[EvacuationC]::CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 add_executable(${PROJECT_NAME}
     src/bim_tools.c         src/bim_tools.h
@@ -30,26 +24,34 @@ add_executable(${PROJECT_NAME}
     src/main.c
     )
 
-if (CMAKE_BUILD_TYPE MATCHES Release)
-    target_compile_definitions(${PROJECT_NAME}
-        PUBLIC
-            NDEBUG
-    )
-endif()
-
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-        ./thirdparty/
+        ./thirdparty/triangle
+        ./thirdparty/arraylist
+        ./thirdparty/json-c
+        ./thirdparty/c-logger
     )
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        logger
+        logger_static
         triangle
+        pthread
         arraylist
         json-c
         m
+    "-static"
     )
+
+
+add_subdirectory(thirdparty/triangle)
+add_subdirectory(thirdparty/arraylist)
+add_subdirectory(thirdparty/c-logger)
+
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+#set(BUILD_STATIC_LIBS ON)
+set(BUILD_SHARED_LIBS OFF)
+add_subdirectory(thirdparty/json-c)
 
 ### Test
 if(build_tests)

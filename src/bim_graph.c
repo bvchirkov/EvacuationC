@@ -15,16 +15,16 @@
 
 #include "bim_graph.h"
 
-bim_graph*  _graph_create(const bim_edge *edges, uint32_t edge_count, uint32_t node_count);
+bim_graph_t*  _graph_create(const bim_edge *edges, uint32_t edge_count, uint32_t node_count);
 void        _graph_create_edges(const ArrayList *list_doors, ArrayListEqualFunc callback, bim_edge *edges, const ArrayList *rooms_and_stairs);
 int32_t     _arraylist_equal_callback(const ArrayListValue value1, const ArrayListValue value2);
 
-bim_graph *bim_graph_new(const bim_t *bim)
+bim_graph_t *bim_graph_new(const bim_t *bim)
 {
     bim_edge edges[bim->transits->length];
     _graph_create_edges(bim->transits, _arraylist_equal_callback, edges, bim->zones);
 
-    bim_graph *bim_graph = _graph_create(edges, bim->transits->length, bim->zones->length);
+    bim_graph_t *bim_graph = _graph_create(edges, bim->transits->length, bim->zones->length);
     if (!bim_graph)
     {
         return NULL;
@@ -34,7 +34,7 @@ bim_graph *bim_graph_new(const bim_t *bim)
 }
 
 // Function to print adjacency list representation of a graph
-void bim_graph_print(const bim_graph* graph)
+void bim_graph_print(const bim_graph_t* graph)
 {
     for (size_t i = 0; i < graph->node_count; i++)
     {
@@ -49,7 +49,7 @@ void bim_graph_print(const bim_graph* graph)
     }
 }
 
-void bim_graph_free(bim_graph* graph)
+void bim_graph_free(bim_graph_t* graph)
 {
     for(size_t i = 0; i < graph->node_count; i++)
     {
@@ -60,7 +60,7 @@ void bim_graph_free(bim_graph* graph)
 }
 
 // Function to create an adjacency list from specified edges
-bim_graph* _graph_create(const bim_edge *edges, uint32_t edge_count, uint32_t node_count)
+bim_graph_t* _graph_create(const bim_edge *edges, uint32_t edge_count, uint32_t node_count)
 {
     if (!edges)
         return NULL;
@@ -69,7 +69,7 @@ bim_graph* _graph_create(const bim_edge *edges, uint32_t edge_count, uint32_t no
         return NULL;
 
     // allocate storage for the graph data structure
-    bim_graph* graph = (bim_graph*)malloc(sizeof(bim_graph));
+    bim_graph_t* graph = (bim_graph_t*)malloc(sizeof(bim_graph_t));
     if (!graph)
         return NULL;
 

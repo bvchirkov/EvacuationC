@@ -34,6 +34,21 @@ void print_info(const double time, const ArrayList * zones, const double numofpe
     printf("%8.2f\n", numofpeople);
 }
 
+static void usage(const char *argv0, int exitval, const char *errmsg)
+{
+    FILE *fp = stdout;
+    if (exitval != 0)
+        fp = stderr;
+    if (errmsg != NULL)
+        fprintf(fp, "ОШИБКА: %s\n\n", errmsg);
+    fprintf(fp, "Использование: %s -f -o [-с] [-l]\n", argv0);
+    fprintf(fp, "  -f - Файл пространнственно-информационной модели здания\n");
+    fprintf(fp, "  -o - Файл с детализацией процесса освобождения здания\n");
+    fprintf(fp, "  -c - Файл конфигурции моделирования\n");
+    fprintf(fp, "  -l - Файл конфигурции логгирования\n");
+    exit(exitval);
+}
+
 static void output_head(FILE *fp, bim_t *bim);
 static void output_body(FILE *fp, bim_t *bim);
 static void output_footer(FILE *fp, bim_t *bim);
@@ -46,26 +61,19 @@ int main (int argc, char** argv)
     char *logger_config_file = NULL;
     char *bim_config_file = NULL;
     int c;
-    while ((c = getopt (argc, argv, "c:l:o:f:")) != -1)
+    while ((c = getopt (argc, argv, "c:l:o:f:h")) != -1)
     {
         switch (c)
         {
-        case 'c':
-            bim_config_file = optarg;
-            break;
-        case 'l':
-            logger_config_file = optarg;
-            break;
-        case 'o':
-            output_file = optarg;
-            break;
-        case 'f':
-            input_file = optarg;
-            break;
-        default:
-            abort ();
+        case 'c': bim_config_file = optarg;             break;
+        case 'l': logger_config_file = optarg;          break;
+        case 'o': output_file = optarg;                 break;
+        case 'f': input_file = optarg;                  break;
+        case 'h': usage(argv[0], EXIT_SUCCESS, NULL);   break;
+        default: /* '?' */ usage(argv[0], EXIT_FAILURE, "Неизвестный аргумент");
         }
     }
+    if (argc == 1) usage(argv[0], EXIT_FAILURE, "Ожидаются аргументы");
 
     // Настройки с-logger
     logger_initConsoleLogger(stdout);
@@ -110,7 +118,7 @@ int main (int argc, char** argv)
     LOG_TRACE("Количество дверей: %i", transits->length);
     LOG_TRACE("Количество человек в здании: %.2f чел.", bim_tools_get_numofpeople(bim));
 
-    bim_graph *graph = bim_graph_new(bim);
+    bim_graph_t *graph = bim_graph_new(bim);
     //bim_graph_print(graph);
 
     if (cfg_modeling.step > 0) evac_set_modeling_step(cfg_modeling.step);

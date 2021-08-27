@@ -14,13 +14,11 @@
  */
 
 #include "bim_polygon_tools.h"
-#include "triangle/triangle.h"
-
-/// @return Массив номеров точек треугольников
-int* _triangle_polygon(const polygon_t *polygon);
+#include "triangle.h"
 
 // https://userpages.umbc.edu/~rostamia/cbook/triangle.html
-int* _triangle_polygon(const polygon_t *polygon)
+/// @return Массив номеров точек треугольников
+static int* _triangle_polygon(const polygon_t *polygon)
 {
     struct triangulateio *in = (struct triangulateio *) malloc(sizeof (struct triangulateio));
     struct triangulateio *out = (struct triangulateio *) malloc(sizeof (struct triangulateio));
@@ -47,8 +45,8 @@ int* _triangle_polygon(const polygon_t *polygon)
     char triswitches[2] = "zQ";
     triangulate(triswitches, in, out, NULL);
 
-    free(in);
-    free(out);
+    trifree(in);
+    trifree(out);
 
     return trianglelist;
 }
@@ -81,7 +79,7 @@ double geom_tools_area_polygon(const polygon_t *polygon)
     return areaElement;
 }
 
-int _where_point(double aAx, double aAy, double aBx, double aBy, double aPx, double aPy)
+static int _where_point(double aAx, double aAy, double aBx, double aBy, double aPx, double aPy)
 {
     double s = (aBx - aAx) * (aPy - aAy) - (aBy - aAy) * (aPx - aAx);
     if (s > 0) return 1;        // Точка слева от вектора AB
@@ -89,7 +87,7 @@ int _where_point(double aAx, double aAy, double aBx, double aBy, double aPx, dou
     else return 0;              // Точка на векторе, прямо по вектору или сзади вектора
 }
 
-uint8_t _is_point_in_triangle(double aAx, double aAy, double aBx, double aBy, double aCx, double aCy, double aPx, double aPy)
+static uint8_t _is_point_in_triangle(double aAx, double aAy, double aBx, double aBy, double aCx, double aCy, double aPx, double aPy)
 {
     int q1 = _where_point(aAx, aAy, aBx, aBy, aPx, aPy);
     int q2 = _where_point(aBx, aBy, aCx, aCy, aPx, aPy);
@@ -115,12 +113,12 @@ uint8_t geom_tools_is_point_in_polygon(const point_t *point, const polygon_t *po
 }
 
 // signed area of a triangle
-double _area(const point_t *p1, const point_t *p2, const point_t *p3)
+static double _area(const point_t *p1, const point_t *p2, const point_t *p3)
 {
     return (p2->x - p1->x) * (p3->y - p1->y) - (p2->y - p1->y) * (p3->x - p1->x);
 }
 
-void _fswap(double *v1, double *v2)
+static void _fswap(double *v1, double *v2)
 {
     double tmp_v1 = *v1;
     *v1 = *v2;
@@ -128,7 +126,7 @@ void _fswap(double *v1, double *v2)
 }
 
 // https://e-maxx.ru/algo/segments_intersection_checking
-uint8_t _intersect_1(double a, double b, double c, double d)
+static uint8_t _intersect_1(double a, double b, double c, double d)
 {
     if (a > b) _fswap(&a, &b);
     if (c > d) _fswap(&c, &d);

@@ -280,7 +280,7 @@ static int potentialcmp_callback (const ArrayListValue value1, const ArrayListVa
     return ((bim_zone_t *)value1)->potential < ((bim_zone_t *)value2)->potential;
 }
 
-void evac_moving_step(const bim_graph *graph, const ArrayList *zones, const ArrayList *transits)
+void evac_moving_step(const bim_graph_t *graph, const ArrayList *zones, const ArrayList *transits)
 {
     reset_zones(zones);
     reset_transits(transits);

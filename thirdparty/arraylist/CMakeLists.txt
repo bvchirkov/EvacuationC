@@ -1,4 +1,4 @@
-add_library(arraylist OBJECT
+add_library(arraylist STATIC
     arraylist.c arraylist.h
     )
 

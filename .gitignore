@@ -21,10 +21,11 @@
 !thirdparty/arraylist/
 !thirdparty/arraylist/*.c
 !thirdparty/arraylist/*.h
+!thirdparty/arraylist/CMakeLists.txt
 !thirdparty/triangle/
 !thirdparty/triangle/*.c
 !thirdparty/triangle/*.h
-!thirdparty/CMakeLists.txt
+!thirdparty/triangle/CMakeLists.txt
 
 !test/
 !test/*.c

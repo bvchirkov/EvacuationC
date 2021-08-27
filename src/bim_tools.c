@@ -246,9 +246,9 @@ int _calculate_transits_width(ArrayList *zones, ArrayList *transits)
         multiline_t edge2 = {.point_count=0, .points=(point_t *) malloc(sizeof (point_t) * 2)};
 
         const polygon_t *tpolygon = btransit->polygon;
-        for(size_t i = 1; i < tpolygon->point_count; ++i)
+        for(size_t j = 1; j < tpolygon->point_count; ++j)
         {
-            point_t tpoint = tpolygon->points[i];
+            point_t tpoint = tpolygon->points[j];
             uint8_t tpoint_in_zpolygon = geom_tools_is_point_in_polygon(&tpoint, &zpolygons[0]);
             if (tpoint_in_zpolygon)
                 edge1.points[edge1.point_count++] = tpoint;

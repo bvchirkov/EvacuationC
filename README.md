@@ -22,11 +22,7 @@
 
 ## Интсрументарий
 - cmake >= 3.16
-- gcc-10
-
-``` bash
-sudo apt install cmake gcc-10
-```
+- gcc-10 or clang-11
 
 Клонируйте репозиторий
 ``` bash
@@ -36,7 +32,7 @@ git clone --recurse-submodules https://github.com/bvchirkov/EvacuationC.git
 ``` bash
 cd EvacuationC
 mkdir build
-cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=OFF -S  . -B build/ && cmake --build build/
+cmake -S  . -B build/ && cmake --build build/
 ```
 Готовый к запуску файл расположен в дирректории `build/` -- `EvacuationC`
 
@@ -47,6 +43,7 @@ cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=OFF -S  . -B build/ && cmak
 - `-o` -- [_required_] файл с детализацией процесса моделирования
 - `-c` -- [_optional_] файл конфигурации сценария моделирования
 - `-l` -- [_optional_] файл конфигурации логгера
+- `-h` -- вывод справки по параметрам запуска
 
 ``` bash
 cd build

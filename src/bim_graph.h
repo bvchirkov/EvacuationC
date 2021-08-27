@@ -24,7 +24,7 @@
 
 #include "bim_tools.h"
 
-typedef struct graph bim_graph;
+typedef struct graph bim_graph_t;
 typedef struct node bim_node;
 typedef struct edge bim_edge;
 
@@ -53,8 +53,8 @@ struct edge {
     uint64_t id;
 };
 
-bim_graph*  bim_graph_new    (const bim_t *bim);
-void        bim_graph_print  (const bim_graph *graph);
-void        bim_graph_free   (bim_graph* graph);
+bim_graph_t*  bim_graph_new    (const bim_t *bim);
+void        bim_graph_print  (const bim_graph_t *graph);
+void        bim_graph_free   (bim_graph_t* graph);
 
 #endif //BIM_GRAPH_H
