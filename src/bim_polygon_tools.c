@@ -39,7 +39,7 @@ static int* _triangle_polygon(const polygon_t *polygon)
 
     out->pointlist = NULL;
     out->pointmarkerlist = NULL;
-    int *trianglelist = (int *) malloc(in->numberofpoints);
+    int *trianglelist = (int *) malloc(sizeof(int) * in->numberofpoints);
     out->trianglelist = trianglelist;  // Индексы точек треугольников против часовой стрелки
 
     char triswitches[2] = "zQ";
