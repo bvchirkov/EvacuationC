@@ -18,37 +18,45 @@
 
 // https://userpages.umbc.edu/~rostamia/cbook/triangle.html
 /// @return Массив номеров точек треугольников
-static int* _triangle_polygon(const polygon_t *polygon)
+static void _triangle_polygon(const polygon_t polygon, int *trianglelist)
 {
-    struct triangulateio *in = (struct triangulateio *) malloc(sizeof (struct triangulateio));
-    struct triangulateio *out = (struct triangulateio *) malloc(sizeof (struct triangulateio));
-    const uint8_t point_count = polygon->point_count * 2;
-    REAL pointlist[point_count];
-    const point_t *points = polygon->points;
-    for (size_t i = 0; i < point_count; points++)
+    struct triangulateio in;
+
+    REAL *pointlist = (REAL *) malloc(sizeof (REAL) * polygon.point_count * 2);
+    uint64_t counter = 0;
+    for (size_t i = 0; i < polygon.point_count; i++)
     {
-        pointlist[i++] = points->x;
-        pointlist[i++] = points->y;
+        pointlist[counter++] = polygon.points[i].x;
+        pointlist[counter++] = polygon.points[i].y;
     }
 
-    in->pointlist = pointlist;
-    in->numberofpoints = polygon->point_count;
-    in->pointattributelist = NULL;
-    in->pointmarkerlist = NULL;
-    in->numberofpointattributes = 0;
+    in.pointlist = pointlist;
+    in.pointattributelist = (REAL*) NULL;
+    in.pointmarkerlist = (int *) NULL;
+    in.numberofpoints = polygon.point_count;
+    in.trianglelist = trianglelist;  // Индексы точек треугольников против часовой стрелки
+    in.numberofpointattributes = 0;
+    in.triangleattributelist = NULL;
+    in.trianglearealist = NULL;
+    in.neighborlist = NULL;
+    in.numberoftriangles = 0;
+    in.numberofcorners = 0;
+    in.numberoftriangleattributes = 0;
+    in.segmentlist = NULL;
+    in.segmentmarkerlist = NULL;
+    in.numberofsegments = 0;
+    in.holelist = NULL;
+    in.numberofholes = 0;
+    in.regionlist = NULL;
+    in.numberofregions = 0;
+    in.edgelist = NULL;
+    in.edgemarkerlist = NULL;
+    in.normlist = NULL;
+    in.numberofedges = 0;
 
-    out->pointlist = NULL;
-    out->pointmarkerlist = NULL;
-    int *trianglelist = (int *) malloc(sizeof(int) * in->numberofpoints);
-    out->trianglelist = trianglelist;  // Индексы точек треугольников против часовой стрелки
-
-    char triswitches[2] = "zQ";
-    triangulate(triswitches, in, out, NULL);
-
-    trifree(in);
-    trifree(out);
-
-    return trianglelist;
+    char *triswitches = "zQ";
+    triangulate(triswitches, &in, &in, NULL);
+    free(pointlist);
 }
 
 double geom_tools_length_side(const point_t *p1, const point_t *p2)
@@ -56,18 +64,29 @@ double geom_tools_length_side(const point_t *p1, const point_t *p2)
     return sqrt(pow(p1->x - p2->x, 2) + pow(p1->y - p2->y, 2));
 }
 
-double geom_tools_area_polygon(const polygon_t *polygon)
+double geom_tools_area_polygon(const polygon_t polygon)
 {
-    int *trianglelist = _triangle_polygon(polygon);
+    uint64_t numberof_triangle_corner = polygon.point_count;
+    // Увеличение количества точек, до кратного трем
+    // Необходимо, потому иначе на выходе будет столько же точек, сколько на входе
+    // и для квадрата получится не два треугольника, а 1 и пара точек
+    // т.е. если количество точек не кратно трем,
+    // то последний треугольник не будет замкнут
+    if (numberof_triangle_corner % 3 != 0)
+        numberof_triangle_corner += 3 - numberof_triangle_corner % 3;
+
+    int *trianglelist = (int *) malloc(sizeof(int) * numberof_triangle_corner);
+    _triangle_polygon(polygon, trianglelist);
 
     //Вычисляем площадь по формуле S=(p(p-ab)(p-bc)(p-ca))^0.5;
     //p=(ab+bc+ca)0.5
     double areaElement = 0;
-    for (size_t i = 0; i < polygon->point_count + 1; i+=3)
+    for (size_t i = 0; i < numberof_triangle_corner; i+=3)
     {
-        const point_t *a = &polygon->points[trianglelist[i+0]];
-        const point_t *b = &polygon->points[trianglelist[i+1]];
-        const point_t *c = &polygon->points[trianglelist[i+2]];
+        const int ps [] = {trianglelist[i+0], trianglelist[i+1], trianglelist[i+2]};
+        const point_t *a = &polygon.points[ps[0]];
+        const point_t *b = &polygon.points[ps[1]];
+        const point_t *c = &polygon.points[ps[2]];
         double ab = geom_tools_length_side(a, b);
         double bc = geom_tools_length_side(b, c);
         double ca = geom_tools_length_side(c, a);
@@ -98,9 +117,20 @@ static uint8_t _is_point_in_triangle(double aAx, double aAy, double aBx, double 
 
 uint8_t geom_tools_is_point_in_polygon(const point_t *point, const polygon_t *polygon)
 {
-    int* trianglelist = _triangle_polygon(polygon);
+    uint64_t numberof_triangle_corner = polygon->point_count;
+    // Увеличение количества точек, до кратного трем
+    // Необходимо, потому иначе на выходе будет столько же точек, сколько на входе
+    // и для квадрата получится не два треугольника, а 1 и пара точек
+    // т.е. если количество точек не кратно трем,
+    // то последний треугольник не будет замкнут
+    if (numberof_triangle_corner % 3 != 0)
+        numberof_triangle_corner += 3 - numberof_triangle_corner % 3;
+
+    int *trianglelist = (int *) malloc(sizeof(int) * numberof_triangle_corner);
+    _triangle_polygon(*polygon, trianglelist);
+
     uint8_t result = 0;
-    for (size_t i = 0; i < polygon->point_count; i += 3)
+    for (size_t i = 0; i < numberof_triangle_corner; i += 3)
     {
         const point_t *a = &polygon->points[trianglelist[i+0]];
         const point_t *b = &polygon->points[trianglelist[i+1]];
@@ -108,7 +138,7 @@ uint8_t geom_tools_is_point_in_polygon(const point_t *point, const polygon_t *po
         result = _is_point_in_triangle(a->x, a->y, b->x, b->y, c->x, c->y, point->x, point->y);
         if (result == 1) break;
     }
-
+    free(trianglelist);
     return result;
 }
 
