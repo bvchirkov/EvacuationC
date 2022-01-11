@@ -136,7 +136,7 @@ static double evac_speed_on_stair(double density_in_zone, int direction)
 static double speed_in_element(const bim_zone_t *receiving_zone,  // принимающая зона
                                const bim_zone_t *giver_zone)      // отдающая зона
 {
-    double density_in_giver_zone = giver_zone->base->z_level / giver_zone->area;
+    double density_in_giver_zone = giver_zone->num_of_people / giver_zone->area;
     // По умолчанию, используется скорость движения по горизонтальной поверхности
     double v_zone = speed_in_room(density_in_giver_zone, evac_speed_max);
 

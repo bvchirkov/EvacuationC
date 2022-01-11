@@ -32,13 +32,13 @@ bim_json_object_t* bim_json_new(const char* filename)
     json_object *name_building = json_object_object_get(root, "NameBuilding");
     bim->name = strdup(json_object_get_string(name_building));
 
-    json_object *address = json_object_object_get(root, "Address");
+    json_object *address    = json_object_object_get(root,    "Address");
     json_object *st_address = json_object_object_get(address, "StreetAddress");
-    json_object *city = json_object_object_get(address, "City");
-    json_object *add_info = json_object_object_get(address, "AddInfo");
+    json_object *city       = json_object_object_get(address, "City");
+    json_object *add_info   = json_object_object_get(address, "AddInfo");
     bim->address.street_address = strdup(json_object_get_string(st_address));
-    bim->address.city = strdup(json_object_get_string(city));
-    bim->address.add_info = strdup(json_object_get_string(add_info));
+    bim->address.city           = strdup(json_object_get_string(city));
+    bim->address.add_info       = strdup(json_object_get_string(add_info));
 
     json_object *levels = json_object_object_get(root, "Level");
     uint8_t levels_count = json_object_array_length(levels);
@@ -48,30 +48,30 @@ bim_json_object_t* bim_json_new(const char* filename)
 
     uint64_t bim_element_rs_id = 0;
     uint64_t bim_element_d_id = 0;
-    json_object *temp1;
+    json_object *jlevel;
     for (uint8_t i = 0; i < levels_count; i++, bim_levels++)
     {
-        temp1 = json_object_array_get_idx(levels, i);
-        json_object *level_name = json_object_object_get(temp1, "NameLevel");
-        json_object *level_z = json_object_object_get(temp1, "ZLevel");
+        jlevel = json_object_array_get_idx(levels, i);
+        json_object *level_name = json_object_object_get(jlevel, "NameLevel");
+        json_object *level_z = json_object_object_get(jlevel, "ZLevel");
         bim_levels->name = strdup(json_object_get_string(level_name));
         bim_levels->z_level = json_object_get_double(level_z);
 
-        json_object *elements = json_object_object_get(temp1, "BuildElement");
+        json_object *elements = json_object_object_get(jlevel, "BuildElement");
         uint8_t elements_count = json_object_array_length(elements);
         bim_json_element_t *bim_elements = (bim_json_element_t*)malloc(sizeof (bim_json_element_t) * elements_count);
         bim_levels->elements = bim_elements;
         bim_levels->elements_count = elements_count;
-        json_object *temp2;
+        json_object *jelement;
         for (uint8_t j = 0; j < elements_count; j++, bim_elements++)
         {
-            temp2 = json_object_array_get_idx(elements, j);
-            json_object *e_name = json_object_object_get(temp2, "Name");
-            json_object *e_size_z = json_object_object_get(temp2, "SizeZ");
-            json_object *e_sign = json_object_object_get(temp2, "Sign");
-            json_object *e_id = json_object_object_get(temp2, "Id");
-            bim_elements->uuid = strndup(json_object_get_string(e_id), UUID_SIZE);
-            bim_elements->name = strdup(json_object_get_string(e_name));
+            jelement = json_object_array_get_idx(elements, j);
+            json_object *e_name   = json_object_object_get(jelement, "Name");
+            json_object *e_size_z = json_object_object_get(jelement, "SizeZ");
+            json_object *e_sign   = json_object_object_get(jelement, "Sign");
+            json_object *e_id     = json_object_object_get(jelement, "Id");
+            bim_elements->uuid   = strndup(json_object_get_string(e_id), UUID_SIZE);
+            bim_elements->name   = strdup(json_object_get_string(e_name));
             bim_elements->size_z = json_object_get_double(e_size_z);
 
             bim_elements->numofpeople = 0;
@@ -83,7 +83,7 @@ bim_json_object_t* bim_json_new(const char* filename)
             {
                 b_element_sign = ROOM;
                 bim_elements->id = bim_element_rs_id++;
-                json_object *e_nop = json_object_object_get(temp2, "NumPeople");
+                json_object *e_nop = json_object_object_get(jelement, "NumPeople");
                 bim_elements->numofpeople = json_object_get_double(e_nop);
             }
             else if (streq(element_sign, "Staircase"))    { b_element_sign = STAIR;       bim_elements->id = bim_element_rs_id++; }
@@ -93,19 +93,19 @@ bim_json_object_t* bim_json_new(const char* filename)
             else b_element_sign = UNDEFINDED;
             bim_elements->sign = b_element_sign;
 
-            json_object *outputs = json_object_object_get(temp2, "Output");
+            json_object *outputs = json_object_object_get(jelement, "Output");
             uint8_t outputs_count = json_object_array_length(outputs);
             char **bim_element_outputs = (char**)malloc(sizeof (char*) * elements_count);
             bim_elements->outputs = bim_element_outputs;
             bim_elements->outputs_count = outputs_count;
-            json_object *temp3;
+            json_object *joutput;
             for (size_t k = 0; k < outputs_count; k++)
             {
-                temp3 = json_object_array_get_idx(outputs, k);
-                bim_element_outputs[k] = strndup(json_object_get_string(temp3), UUID_SIZE);
+                joutput = json_object_array_get_idx(outputs, k);
+                bim_element_outputs[k] = strndup(json_object_get_string(joutput), UUID_SIZE);
             }
 
-            json_object *xy = json_object_object_get(temp2, "XY");
+            json_object *xy = json_object_object_get(jelement, "XY");
             json_object *xy0 = json_object_array_get_idx(xy, 0);
             json_object *points = json_object_object_get(xy0, "points");
             uint8_t points_count = json_object_array_length(points);
@@ -114,12 +114,12 @@ bim_json_object_t* bim_json_new(const char* filename)
             point_t *bim_points = (point_t*)malloc(sizeof (point_t) * points_count);
             bim_polygon->points = bim_points;
             bim_elements->polygon = bim_polygon;
-            json_object *temp4;
+            json_object *jpoint;
             for (uint8_t k = 0; k < points_count; k++, bim_points++)
             {
-                temp4 = json_object_array_get_idx(points, k);
-                json_object *x = json_object_object_get(temp4, "x");
-                json_object *y = json_object_object_get(temp4, "y");
+                jpoint = json_object_array_get_idx(points, k);
+                json_object *x = json_object_object_get(jpoint, "x");
+                json_object *y = json_object_object_get(jpoint, "y");
                 bim_points->x = json_object_get_double(x);
                 bim_points->y = json_object_get_double(y);
             }
@@ -131,10 +131,113 @@ bim_json_object_t* bim_json_new(const char* filename)
     return bim;
 }
 
-bim_json_object_t* bim_json_copy (const bim_json_object_t* bim_object)
+bim_json_object_t* bim_json_copy(const bim_json_object_t* bim_object)
 {
-    // TODO
-    return (bim_json_object_t *)bim_object;
+    bim_json_object_t *bim;
+
+    char *name;
+    uint8_t levels_count;
+    bim_json_level_t *levels;
+    bim_json_address_t address;
+
+    bim = (bim_json_object_t*)malloc(sizeof(bim_json_object_t));
+    if (!bim) {
+        LOG_ERROR("Не удалось выделить память для структуры `bim_json_object_t` при копировании");
+        return NULL;
+    }
+    levels = (bim_json_level_t*)malloc(sizeof(bim_json_level_t));
+    if (!levels) {
+        LOG_ERROR("Не удалось выделить память для структуры `bim_json_level_t` при копировании");
+        free(bim);
+        return NULL;
+    }
+    name = strdup(bim_object->name);
+    levels_count = bim_object->levels_count;
+
+    address.add_info = strdup(bim_object->address.add_info);
+    address.city = strdup(bim_object->address.city);
+    address.street_address = strdup(bim_object->address.street_address);
+
+    bim->name = name;
+    bim->levels = levels;
+    bim->levels_count = levels_count;
+    bim->address = address;
+
+    for (size_t i = 0; i < levels_count; ++i)
+    {
+        bim_json_level_t *level = &levels[i];
+        bim_json_level_t level_original = bim_object->levels[i];
+        level->name = strdup(level_original.name);
+        level->z_level = level_original.z_level;
+        level->elements_count = level_original.elements_count;
+
+        bim_json_element_t *elements = (bim_json_element_t*)malloc(sizeof(bim_json_element_t) * level->elements_count);
+        if (!elements) {
+            LOG_ERROR("Не удалось выделить память для структуры `bim_json_element_t` при копировании");
+            free(bim);
+            free(levels);
+            return NULL;
+        }
+
+        level->elements = elements;
+        for (size_t j = 0; j < level->elements_count; ++j)
+        {
+            bim_json_element_t *element = &elements[j];
+            bim_json_element_t element_original = level_original.elements[j];
+
+            element->id = element_original.id;
+            element->name = strdup(element_original.name);
+            element->numofpeople = element_original.numofpeople;
+            element->uuid = strdup(element_original.uuid);
+            element->size_z = element_original.size_z;
+            element->z_level = element_original.z_level;
+            element->outputs_count = element_original.outputs_count;
+            element->sign = element_original.sign;
+
+            polygon_t *polygon = (polygon_t*)malloc(sizeof(polygon_t));
+            if (!polygon) {
+                LOG_ERROR("Не удалось выделить память для структуры `bim_json_element_t` при копировании");
+                free(bim);
+                free(levels);
+                free(elements);
+                return NULL;
+            }
+
+            {
+                polygon->point_count = element_original.polygon->point_count;
+                point_t *points = (point_t*)malloc(sizeof (point_t) * polygon->point_count);
+                if (!points) {
+                    LOG_ERROR("Не удалось выделить память для структуры `bim_json_element_t` при копировании");
+                    free(bim);
+                    free(levels);
+                    free(elements);
+                    free(polygon);
+                    return NULL;
+                }
+
+                for (size_t k = 0; k < polygon->point_count; ++k)
+                {
+                    point_t *point = &points[k];
+                    point_t point_original = element_original.polygon->points[k];
+                    point->x = point_original.x;
+                    point->y = point_original.y;
+                }
+                polygon->points = points;
+            }
+            element->polygon = polygon;
+
+            char **outputs = (char **)malloc(sizeof(char*) * element->outputs_count);
+            {
+                for (size_t k = 0; k < element->outputs_count; ++k)
+                {
+                    outputs[k] = strdup(element_original.outputs[k]);
+                }
+            }
+            element->outputs = outputs;
+        }
+    }
+
+    return bim;
 }
 
 static void _element_delete(bim_json_element_t *element)
@@ -165,7 +268,7 @@ static void _level_delete(bim_json_level_t *level)
     free(level->elements);
 }
 
-void bim_json_free (bim_json_object_t* bim)
+void bim_json_free(bim_json_object_t* bim)
 {
     bim_json_level_t *levels_ptr = bim->levels;
     for (uint8_t i = 0; i < bim->levels_count; i++, levels_ptr++)
