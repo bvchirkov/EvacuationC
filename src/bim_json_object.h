@@ -24,8 +24,8 @@
 структур, используемых для представления здания в программе
 */
 
-#ifndef BIM_OBJECT_H
-#define BIM_OBJECT_H
+#ifndef BIM_JSON_OBJECT_H
+#define BIM_JSON_OBJECT_H
 
 #include <string.h>
 #include <stdio.h>
@@ -41,7 +41,7 @@
 typedef enum
 {
     ROOM,           ///< Указывает, что элемент здания является помещением/комнатой
-    STAIR,          ///< Указывает, что элемент здания является лестницей
+    STAIRCASE,      ///< Указывает, что элемент здания является лестницей
     DOOR_WAY,       ///< Указывает, что элемент здания является проемом (без дверного полотна)
     DOOR_WAY_INT,   ///< Указывает, что элемент здания является дверью, которая соединяет
                     ///< два элемента: ROOM и ROOM или ROOM и STAIR
@@ -61,7 +61,7 @@ typedef struct
     uint16_t                numofpeople;    ///< [JSON] Количество людей в элементе
     bim_element_sign_t      sign;           ///< [JSON] Тип элемента
     polygon_t               *polygon;       ///< [JSON] Полигон элемента
-    uint8_t                 outputs_count;  ///< Количество связанных с текущим элементов
+    uint8_t                 numofoutputs;   ///< Количество связанных с текущим элементов
     char                    **outputs;      ///< [JSON] Массив UUID элементов, которые являются соседними
 } bim_json_element_t;
 
@@ -78,7 +78,7 @@ typedef struct
 {
     char                *name;          ///< [JSON] Название этажа
     float               z_level;        ///< [JSON] Высота этажа над нулевой отметкой
-    uint16_t            elements_count; ///< Количство элементов на этаже
+    uint16_t            numofelements;  ///< Количство элементов на этаже
     bim_json_element_t  *elements;      ///< [JSON] Массив элементов, которые принадлежат этажу
 } bim_json_level_t;
 
@@ -86,7 +86,7 @@ typedef struct
 typedef struct
 {
     char                *name;          ///< [JSON] Название здания
-    uint8_t             levels_count;   ///< Количество уровней в здании
+    uint8_t             numoflevels;    ///< Количество уровней в здании
     bim_json_level_t    *levels;        ///< [JSON] Массив уровней здания
     bim_json_address_t  address;        ///< [JSON] Информация о местоположении объекта
 } bim_json_object_t;
@@ -97,7 +97,7 @@ typedef struct
 \param[in] filename Имя файла
 \returns Указатель на объект типа bim_object_t
 */
-bim_json_object_t*  bim_json_new        (const char* filename);
+const bim_json_object_t*  bim_json_new        (const char* filename);
 
 /*!
 Копирует объект типа bim_object_t и возвращает указатель на новый объект
@@ -105,7 +105,7 @@ bim_json_object_t*  bim_json_new        (const char* filename);
 \param[in] bim_object Объект для копирования
 \returns Указатель на объект типа bim_object_t
 */
-bim_json_object_t*  bim_json_copy       (const bim_json_object_t *bim_object);
+const bim_json_object_t*  bim_json_copy       (const bim_json_object_t *bim_object);
 
 /*!
 Удаляет объект типа bim_object_t и освобождает память
@@ -114,4 +114,4 @@ bim_json_object_t*  bim_json_copy       (const bim_json_object_t *bim_object);
 */
 void           bim_json_free     (bim_json_object_t* bim_object);
 
-#endif //BIM_OBJECT_H
+#endif //BIM_JSON_OBJECT_H

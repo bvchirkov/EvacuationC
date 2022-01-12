@@ -74,7 +74,7 @@ typedef struct
 typedef struct
 {
     char        *name;          ///< [JSON] Название здания
-    uint8_t     levels_count;   ///< Количество уровней в здании
+    uint8_t     numoflevels;   ///< Количество уровней в здании
     bim_level_t *levels;        ///< [JSON] Массив уровней здания
     bim_zone_t  *outside;       ///< Зона вне здания
 } bim_object_t;

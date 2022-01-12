@@ -25,7 +25,7 @@ static double _evac_time = 0;
 void evac_def_modeling_step(const bim_t *bim, uint64_t bim_element_count)
 {
     double numofpeople = 0;
-    for(size_t i = 0; i < bim->object->levels_count; i++)
+    for(size_t i = 0; i < bim->object->numoflevels; i++)
     {
         for (size_t j = 0; j < bim->object->levels[i].zone_count; j++)
         {
@@ -144,7 +144,7 @@ static double speed_in_element(const bim_zone_t *receiving_zone,  // прини�
 
     // Если принимающее помещение является лестницей и находится на другом уровне,
     // то скорость будет рассчитываться как по наклонной поверхности
-    if (fabs(dh) > 1e-3 && receiving_zone->base->sign == STAIR)
+    if (fabs(dh) > 1e-3 && receiving_zone->base->sign == STAIRCASE)
     {
       /* Иначе определяем направление движения по лестнице
        * -1 вниз, 1 вверх
@@ -295,7 +295,7 @@ void evac_moving_step(const bim_graph_t *graph, const ArrayList *zones, const Ar
 
     while (1)
     {
-        for (size_t i = 0; i < receiving_zone->base->outputs_count && ptr != NULL; i++, ptr = ptr->next)
+        for (size_t i = 0; i < receiving_zone->base->numofoutputs && ptr != NULL; i++, ptr = ptr->next)
         {
             bim_transit_t *transit = transits->data[ptr->eid];
             if (transit->is_visited || transit->is_blocked) continue;
@@ -311,7 +311,7 @@ void evac_moving_step(const bim_graph_t *graph, const ArrayList *zones, const Ar
             giver_zone->is_visited = true;
             transit->is_visited = true;
 
-            if (giver_zone->base->outputs_count > 1 && !giver_zone->is_blocked
+            if (giver_zone->base->numofoutputs > 1 && !giver_zone->is_blocked
                 && arraylist_index_of(zones_to_process, elementideq_callback, giver_zone) < 0)
             {
                 arraylist_append(zones_to_process, giver_zone);
