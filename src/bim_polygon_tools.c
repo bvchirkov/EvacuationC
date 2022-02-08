@@ -115,18 +115,17 @@ static uint8_t _is_point_in_triangle(double aAx, double aAy, double aBx, double 
     return (q1 >= 0 && q2 >= 0 && q3 >= 0);
 }
 
-uint8_t geom_tools_is_point_in_polygon(const point_t *const point, const polygon_t * const polygon)
+uint8_t geom_tools_is_point_in_polygon(const point_t *const point, const polygon_t *const polygon)
 {
     size_t numof_triangle_corner = (polygon->numofpoints - 2) * 3;
 
-    int trianglelist[30] = {0};
-//    int *trianglelist = NULL;
-//    trianglelist = (int *) malloc(sizeof(int) * numof_triangle_corner);
-//    if (!trianglelist) {
-//        return -1;
-//    }
-    size_t numberoftriangles = _triangle_polygon(polygon, trianglelist);
+    int *trianglelist = NULL;
+    trianglelist = (int *)calloc(numof_triangle_corner, sizeof(int));
+    if (!trianglelist) {
+        return -1;
+    }
 
+    size_t numberoftriangles = _triangle_polygon(polygon, trianglelist);
     uint8_t result = 0;
     for (size_t i = 0, start_corner = 0; i < numberoftriangles; ++i, start_corner = i * 3)
     {
@@ -136,7 +135,7 @@ uint8_t geom_tools_is_point_in_polygon(const point_t *const point, const polygon
         result = _is_point_in_triangle(a->x, a->y, b->x, b->y, c->x, c->y, point->x, point->y);
         if (result == 1) break;
     }
-//    free(trianglelist);
+    free(trianglelist);
     return result;
 }
 

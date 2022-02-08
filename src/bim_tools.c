@@ -90,9 +90,9 @@ bim_t* bim_tools_new(const bim_json_object_t *bim_json)
         size_t numofzones = 0;
         size_t numoftransits = 0;
         // Обход элементов уровня
-        for(size_t j = 0; j < jlevels->numofelements; j++)
+        for(size_t j = 0; j < jlevel.numofelements; j++)
         {
-            bim_json_element_t jelement = jlevels->elements[j];
+            bim_json_element_t jelement = jlevel.elements[j];
             if (jelement.sign == ROOM || jelement.sign == STAIRCASE)
             {
                 bim_zone_t *zone = &zones[numofzones];
@@ -250,13 +250,13 @@ bim_t* bim_tools_new(const bim_json_object_t *bim_json)
             fprintf(stderr, "[func: %s() | line: %u] :: zone_count (%u) or transit_count (%u) is zero\n", __func__, __LINE__, level->numofzones, level->numoftransits);
         else
         {
-            level->zones = (bim_zone_t*)reallocarray(level->zones, level->numofzones, sizeof (bim_zone_t));
+            level->zones    = (bim_zone_t*)   reallocarray(level->zones,    level->numofzones,    sizeof (bim_zone_t));
             level->transits = (bim_transit_t*)reallocarray(level->transits, level->numoftransits, sizeof (bim_transit_t));
         }
     }
 
-//    bim_zone_t *outside = _outside_init(bim_json);
-//    arraylist_prepend(zones_list, outside);
+    bim_zone_t *outside = _outside_init(bim_json);
+    arraylist_append(zones_list, outside);
 
     arraylist_sort(zones_list,    _zone_id_cmp);
     arraylist_sort(transits_list, _transit_id_cmp);
@@ -506,8 +506,9 @@ int _calculate_transits_width(ArrayList *zones,    // Список всех зо
 bim_zone_t* _outside_init(const bim_json_object_t * bim_json)
 {
     bim_zone_t * outside = (bim_zone_t*)malloc(sizeof (bim_zone_t));
-    if (!outside)
+    if (!outside) {
         return NULL;
+    }
     outside->id = 0;
     outside->name = strdup("Outside");
     outside->sign = OUTSIDE;
@@ -531,8 +532,8 @@ bim_zone_t* _outside_init(const bim_json_object_t * bim_json)
                 strcpy((void *)outputs[numofoutputs].x, output.x);
                 numofoutputs++;
             }
-            /*else if (element->sign == ROOM || element->sign == STAIRCASE)
-                outside_element->id++;*/
+            else if (element->sign == ROOM || element->sign == STAIRCASE)
+                outside->id++;
         }
     }
 
@@ -543,10 +544,7 @@ bim_zone_t* _outside_init(const bim_json_object_t * bim_json)
     }
 
     outside->numofoutputs = numofoutputs;
-    outside->outputs = (uuid_t*)malloc(outside->numofoutputs * sizeof (uuid_t));
-    memccpy(outside->outputs, outputs, 0, outside->numofoutputs);
-    free(outputs);
-
+    outside->outputs = (uuid_t*)reallocarray(outputs, outside->numofoutputs, sizeof (uuid_t));
     outside->is_blocked = false;
     outside->is_visited = false;
     outside->potential = 0;
