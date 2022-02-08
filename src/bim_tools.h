@@ -27,80 +27,91 @@ bim_level_element_t, и функции для работы с моделью з�
 #ifndef BIM_TOOLS_H
 #define BIM_TOOLS_H
 
-#include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
 #include <stdbool.h>
 
+#include "arraylist.h"          ///< https://github.com/fragglet/c-algorithms
 #include "bim_json_object.h"
-#include "bim_polygon_tools.h"
-#include "arraylist.h" ///< https://github.com/fragglet/c-algorithms
 
 /// Структура, расширяющая элемент DOOR_*
 typedef struct
 {
-    bim_json_element_t   *base;
-    bool            is_visited;     ///< Признак посещения элемента
-    bool            is_blocked;     ///< Признак недоступности элемента для движения
-    float           width;          ///< Ширина проема/двери
-    float           num_of_people;  ///< Количество людей, которые прошли через элемент
+    uuid_t      uuid;           ///< [JSON] UUID идентификатор элемента
+    size_t      id;             ///< Внутренний номер элемента
+    char*       name;           ///< [JSON] Название элемента
+    uuid_t      *outputs;       ///< [JSON] Массив UUID элементов, которые являются соседними
+    polygon_t   *polygon;       ///< [JSON] Полигон элемента
+
+    double      size_z;         ///< [JSON] Высота элемента
+    double      z_level;        ///< Уровень, на котором находится элемент
+    double      width;          ///< Ширина проема/двери
+    double      nop_proceeding; ///< Количество людей, которые прошли через элемент
+    uint8_t     sign;           ///< [JSON] Тип элемента
+    uint8_t     numofoutputs;   ///< Количество связанных с текущим элементов
+    bool        is_visited;     ///< Признак посещения элемента
+    bool        is_blocked;     ///< Признак недоступности элемента для движения
 } bim_transit_t;
 
 /// Структура, расширяющая элемент типа ROOM и STAIR
 typedef struct
 {
-    bim_json_element_t   *base;
-    bool            is_visited;     ///< Признак посещения элемента
-    bool            is_blocked;     ///< Признак недоступности элемента для движения
-    float           num_of_people;  ///< Количество людей в элементе
-    float           potential;      ///< Время достижения безопасной зоны
-    float           area;           ///< Площадь элемента
+    uuid_t      uuid;           ///< [JSON] UUID идентификатор элемента
+    size_t      id;             ///< Внутренний номер элемента
+    char*       name;           ///< [JSON] Название элемента
+    polygon_t   *polygon;       ///< [JSON] Полигон элемента
+    uuid_t      *outputs;       ///< [JSON] Массив UUID элементов, которые являются соседними
+
+    double      size_z;         ///< [JSON] Высота элемента
+    double      z_level;        ///< Уровень, на котором находится элемент
+    double      numofpeople;    ///< Количество людей в элементе
+    double      potential;      ///< Время достижения безопасной зоны
+    double      area;           ///< Площадь элемента
+    uint8_t     sign;           ///< [JSON] Тип элемента
+    uint8_t     numofoutputs;   ///< Количество связанных с текущим элементов
+    bool        is_visited;     ///< Признак посещения элемента
+    bool        is_blocked;     ///< Признак недоступности элемента для движения
 } bim_zone_t;
 
 /// Структура, описывающая этаж
 typedef struct
 {
-    char            *name;          ///< [JSON] Название этажа
-    float           z_level;        ///< [JSON] Высота этажа над нулевой отметкой
-    uint16_t        zone_count;     ///< Количство зон на этаже
-    uint16_t        transit_count;  ///< Количство переходов на этаже
     bim_zone_t      *zones;         ///< Массив зон, которые принадлежат этажу
     bim_transit_t   *transits;      ///< Массив переходов, которые принадлежат этажу
+    char*           name;           ///< [JSON] Название этажа
+    double          z_level;        ///< [JSON] Высота этажа над нулевой отметкой
+    uint16_t        numofzones;     ///< Количство зон на этаже
+    uint16_t        numoftransits;  ///< Количство переходов на этаже
 } bim_level_t;
 
 /// Структура, описывающая здание
 typedef struct
 {
-    char        *name;          ///< [JSON] Название здания
-    uint8_t     numoflevels;   ///< Количество уровней в здании
-    bim_level_t *levels;        ///< [JSON] Массив уровней здания
-    bim_zone_t  *outside;       ///< Зона вне здания
-} bim_object_t;
+    bim_level_t     *levels;        ///< [JSON] Массив уровней здания
+    char*           name;           ///< [JSON] Название здания
 
-typedef struct
-{
-    bim_json_object_t   *json;      ///< Ссылка на структуру, полученную из json файла
-    bim_object_t        *object;    ///< Сслыка на расширенную структуру здания
-    ArrayList           *zones;     ///< Список зон объекта
-    ArrayList           *transits;  ///< Список переходов объекта
+    ArrayList       *zones;         ///< Список зон объекта
+    ArrayList       *transits;      ///< Список переходов объекта
+    uint8_t         numoflevels;    ///< Количество уровней в здании
 } bim_t;
 
-bim_t *bim_tools_new    (const char *file);
-bim_t *bim_tools_copy   (const bim_t *bim);
+
+
+
+bim_t* bim_tools_new    (const bim_json_object_t *bim_json);
+bim_t* bim_tools_copy   (const bim_t *bim);
 void   bim_tools_free   (bim_t* bim);
 
-bim_json_object_t* bim_tools_get_json_bim (void);
+//bim_json_object_t* bim_tools_get_json_bim (void);
 
 // Устанавливает в помещение заданное количество людей
-void    bim_tools_set_people_to_zone (bim_zone_t* element, float num_of_people);
+//void    bim_tools_set_people_to_zone (bim_zone_t* element, float num_of_people);
 
 // Подсчитывает количество людей в здании по расширенной структуре
-double  bim_tools_get_numofpeople(const bim_t *bim);
+//double  bim_tools_get_numofpeople(const bim_t *bim);
 
 //Подсчитывает суммарную площадь элементов всего здания
-double  bim_tools_get_area_bim   (const bim_t *bim);
+//double  bim_tools_get_area_bim   (const bim_t *bim);
 
 void bim_tools_print_element(const bim_zone_t *zone);
 

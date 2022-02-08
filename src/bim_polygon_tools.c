@@ -18,22 +18,24 @@
 
 // https://userpages.umbc.edu/~rostamia/cbook/triangle.html
 /// @return Массив номеров точек треугольников
-static void _triangle_polygon(const polygon_t polygon, int *trianglelist)
+static size_t _triangle_polygon(const polygon_t *const polygon, int *trianglelist)
 {
     struct triangulateio in;
+    size_t numofpoints = polygon->numofpoints/* - 1*/;
+    REAL *pointlist = (REAL *)NULL;
+    pointlist = (REAL *)calloc(numofpoints * 2, sizeof(REAL));
 
-    REAL *pointlist = (REAL *) malloc(sizeof (REAL) * polygon.point_count * 2);
-    uint64_t counter = 0;
-    for (size_t i = 0; i < polygon.point_count; i++)
+    size_t counter = 0;
+    for (size_t i = 0; i < numofpoints; i++)
     {
-        pointlist[counter++] = polygon.points[i].x;
-        pointlist[counter++] = polygon.points[i].y;
+        pointlist[counter++] = polygon->points[i].x;
+        pointlist[counter++] = polygon->points[i].y;
     }
 
     in.pointlist = pointlist;
-    in.pointattributelist = (REAL*) NULL;
+    in.pointattributelist = (REAL *) NULL;
     in.pointmarkerlist = (int *) NULL;
-    in.numberofpoints = polygon.point_count;
+    in.numberofpoints = numofpoints;
     in.trianglelist = trianglelist;  // Индексы точек треугольников против часовой стрелки
     in.numberofpointattributes = 0;
     in.triangleattributelist = NULL;
@@ -57,36 +59,34 @@ static void _triangle_polygon(const polygon_t polygon, int *trianglelist)
     char *triswitches = "zQ";
     triangulate(triswitches, &in, &in, NULL);
     free(pointlist);
+    return (size_t)in.numberoftriangles;
 }
 
-double geom_tools_length_side(const point_t *p1, const point_t *p2)
+double geom_tools_length_side(const point_t *const p1, const point_t *const p2)
 {
     return sqrt(pow(p1->x - p2->x, 2) + pow(p1->y - p2->y, 2));
 }
 
-double geom_tools_area_polygon(const polygon_t polygon)
+double geom_tools_area_polygon(const polygon_t *const polygon)
 {
-    uint64_t numberof_triangle_corner = polygon.point_count;
-    // Увеличение количества точек, до кратного трем
-    // Необходимо, потому иначе на выходе будет столько же точек, сколько на входе
-    // и для квадрата получится не два треугольника, а 1 и пара точек
-    // т.е. если количество точек не кратно трем,
-    // то последний треугольник не будет замкнут
-    if (numberof_triangle_corner % 3 != 0)
-        numberof_triangle_corner += 3 - numberof_triangle_corner % 3;
+    size_t numof_triangle_corner = (polygon->numofpoints - 2) * 3;
 
-    int *trianglelist = (int *) malloc(sizeof(int) * numberof_triangle_corner);
-    _triangle_polygon(polygon, trianglelist);
+    int *trianglelist = (int*)NULL;
+    trianglelist = (int*)calloc(numof_triangle_corner, sizeof (int));
+    if (!trianglelist) {
+        return -1;
+    }
+
+    size_t numberoftriangles = _triangle_polygon(polygon, trianglelist);
 
     //Вычисляем площадь по формуле S=(p(p-ab)(p-bc)(p-ca))^0.5;
     //p=(ab+bc+ca)0.5
     double areaElement = 0;
-    for (size_t i = 0; i < numberof_triangle_corner; i+=3)
+    for (size_t i = 0, start_corner = 0; i < numberoftriangles; ++i, start_corner = i * 3)
     {
-        const int ps [] = {trianglelist[i+0], trianglelist[i+1], trianglelist[i+2]};
-        const point_t *a = &polygon.points[ps[0]];
-        const point_t *b = &polygon.points[ps[1]];
-        const point_t *c = &polygon.points[ps[2]];
+        const point_t *a = &polygon->points[trianglelist[start_corner+0]];
+        const point_t *b = &polygon->points[trianglelist[start_corner+1]];
+        const point_t *c = &polygon->points[trianglelist[start_corner+2]];
         double ab = geom_tools_length_side(a, b);
         double bc = geom_tools_length_side(b, c);
         double ca = geom_tools_length_side(c, a);
@@ -115,30 +115,28 @@ static uint8_t _is_point_in_triangle(double aAx, double aAy, double aBx, double 
     return (q1 >= 0 && q2 >= 0 && q3 >= 0);
 }
 
-uint8_t geom_tools_is_point_in_polygon(const point_t *point, const polygon_t *polygon)
+uint8_t geom_tools_is_point_in_polygon(const point_t *const point, const polygon_t * const polygon)
 {
-    uint64_t numberof_triangle_corner = polygon->point_count;
-    // Увеличение количества точек, до кратного трем
-    // Необходимо, потому иначе на выходе будет столько же точек, сколько на входе
-    // и для квадрата получится не два треугольника, а 1 и пара точек
-    // т.е. если количество точек не кратно трем,
-    // то последний треугольник не будет замкнут
-    if (numberof_triangle_corner % 3 != 0)
-        numberof_triangle_corner += 3 - numberof_triangle_corner % 3;
+    size_t numof_triangle_corner = (polygon->numofpoints - 2) * 3;
 
-    int *trianglelist = (int *) malloc(sizeof(int) * numberof_triangle_corner);
-    _triangle_polygon(*polygon, trianglelist);
+    int trianglelist[30] = {0};
+//    int *trianglelist = NULL;
+//    trianglelist = (int *) malloc(sizeof(int) * numof_triangle_corner);
+//    if (!trianglelist) {
+//        return -1;
+//    }
+    size_t numberoftriangles = _triangle_polygon(polygon, trianglelist);
 
     uint8_t result = 0;
-    for (size_t i = 0; i < numberof_triangle_corner; i += 3)
+    for (size_t i = 0, start_corner = 0; i < numberoftriangles; ++i, start_corner = i * 3)
     {
-        const point_t *a = &polygon->points[trianglelist[i+0]];
-        const point_t *b = &polygon->points[trianglelist[i+1]];
-        const point_t *c = &polygon->points[trianglelist[i+2]];
+        const point_t *a = &polygon->points[trianglelist[start_corner + 0]];
+        const point_t *b = &polygon->points[trianglelist[start_corner + 1]];
+        const point_t *c = &polygon->points[trianglelist[start_corner + 2]];
         result = _is_point_in_triangle(a->x, a->y, b->x, b->y, c->x, c->y, point->x, point->y);
         if (result == 1) break;
     }
-    free(trianglelist);
+//    free(trianglelist);
     return result;
 }
 
@@ -164,7 +162,7 @@ static uint8_t _intersect_1(double a, double b, double c, double d)
 }
 
 // check if two segments intersect
-uint8_t geom_tools_is_intersect_line(const line_t *l1, const line_t *l2)
+uint8_t geom_tools_is_intersect_line(const line_t *const l1, const line_t *const l2)
 {
     const point_t *p1 = l1->p1;
     const point_t *p2 = l1->p2;
@@ -177,7 +175,7 @@ uint8_t geom_tools_is_intersect_line(const line_t *l1, const line_t *l2)
 }
 
 // Определение точки на линии, расстояние до которой от заданной точки является минимальным из существующих
-point_t *geom_tools_nearest_point(const point_t *point_start, const line_t *line)
+point_t *geom_tools_nearest_point(const point_t *const point_start, const line_t *const line)
 {
     point_t a = {line->p1->x, line->p1->y};
     point_t b = {line->p2->x, line->p2->y};
@@ -217,7 +215,8 @@ point_t *geom_tools_nearest_point(const point_t *point_start, const line_t *line
         yy = a.y + param * D;
     }
 
-    point_t *point_end = (point_t *) malloc(sizeof (point_t));
+    point_t *point_end = NULL;
+    point_end = (point_t *) malloc(sizeof (point_t));
     point_end->x = xx;
     point_end->y = yy;
     return point_end;

@@ -35,20 +35,16 @@ typedef struct
 
 typedef struct
 {
-    uint64_t point_count;
-    point_t *points;
-} multiline_t;
-
-typedef struct
-{
-    uint64_t point_count;
+    size_t  numofpoints;
     point_t *points;
 } polygon_t;
 
-double  geom_tools_area_polygon        (const polygon_t polygon);
-uint8_t geom_tools_is_point_in_polygon (const point_t *point, const polygon_t *polygon);
-uint8_t geom_tools_is_intersect_line   (const line_t *l1, const line_t *l2);
-double  geom_tools_length_side         (const point_t *p1, const point_t *p2);
-point_t *geom_tools_nearest_point      (const point_t *point_start, const line_t *line);
+typedef polygon_t multiline_t;
+
+double   geom_tools_area_polygon        (const polygon_t *const polygon);
+uint8_t  geom_tools_is_point_in_polygon (const point_t   *const point,       const polygon_t *const polygon);
+uint8_t  geom_tools_is_intersect_line   (const line_t    *const l1,          const line_t    *const l2);
+double   geom_tools_length_side         (const point_t   *const p1,          const point_t   *const p2);
+point_t* geom_tools_nearest_point       (const point_t   *const point_start, const line_t    *const line);
 
 #endif //BIM_POLYGON_TOOLS_H

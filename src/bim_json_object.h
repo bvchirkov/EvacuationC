@@ -27,14 +27,12 @@
 #ifndef BIM_JSON_OBJECT_H
 #define BIM_JSON_OBJECT_H
 
-#include <string.h>
-#include <stdio.h>
 #include <stdint.h>
 #include "bim_polygon_tools.h"
 #include "logger.h"
 
-/// Количество символов в UUID
-#define UUID_SIZE 36
+/// Количество символов в UUID + NUL символ
+#define UUID_SIZE 36 + 1
 
 /// Набор возможных типов элеметов здания:
 /// ROOM, STAIR, DOOR_WAY, DOOR_WAY_INT, DOOR_WAY_OUT, OUTSIDE
@@ -50,45 +48,50 @@ typedef enum
     UNDEFINDED      ///< Указывает, что тип элемента не определен
 } bim_element_sign_t;
 
+typedef struct
+{
+    const char x[UUID_SIZE];
+} uuid_t;
+
 /// Структура, описывающая элемент
 typedef struct
 {
-    uint64_t                id;             ///< Внутренний номер элемента (генерируется)
-    char                    *uuid;          ///< [JSON] UUID идентификатор элемента
-    char                    *name;          ///< [JSON] Название элемента
-    float                   size_z;         ///< [JSON] Высота элемента
-    float                   z_level;        ///< Уровень, на котором находится элемент
-    uint16_t                numofpeople;    ///< [JSON] Количество людей в элементе
-    bim_element_sign_t      sign;           ///< [JSON] Тип элемента
-    polygon_t               *polygon;       ///< [JSON] Полигон элемента
-    uint8_t                 numofoutputs;   ///< Количество связанных с текущим элементов
-    char                    **outputs;      ///< [JSON] Массив UUID элементов, которые являются соседними
+    uuid_t              uuid;           ///< [JSON] UUID идентификатор элемента
+    const char          *name;          ///< [JSON] Название элемента
+    polygon_t           *polygon;       ///< [JSON] Полигон элемента
+    uuid_t              *outputs;       ///< [JSON] Массив UUID элементов, которые являются соседними
+    size_t              id;             ///< Внутренний номер элемента (генерируется)
+    size_t              numofpeople;    ///< [JSON] Количество людей в элементе
+    size_t              numofoutputs;   ///< Количество связанных с текущим элементов
+    double              size_z;         ///< [JSON] Высота элемента
+    double              z_level;        ///< Уровень, на котором находится элемент
+    bim_element_sign_t  sign;           ///< [JSON] Тип элемента
 } bim_json_element_t;
 
 /// Структура поля, описывающего географическое положение объекта
 typedef struct
 {
-    char *city;             ///< [JSON] Название города
-    char *street_address;   ///< [JSON] Название улицы
-    char *add_info;         ///< [JSON] Дополнительная информация о местоположении объекта
+    const char *city;             ///< [JSON] Название города
+    const char *street_address;   ///< [JSON] Название улицы
+    const char *add_info;         ///< [JSON] Дополнительная информация о местоположении объекта
 } bim_json_address_t;
 
 /// Структура, описывающая этаж
 typedef struct
 {
-    char                *name;          ///< [JSON] Название этажа
-    float               z_level;        ///< [JSON] Высота этажа над нулевой отметкой
-    uint16_t            numofelements;  ///< Количство элементов на этаже
+    const char          *name;          ///< [JSON] Название этажа
     bim_json_element_t  *elements;      ///< [JSON] Массив элементов, которые принадлежат этажу
+    double              z_level;        ///< [JSON] Высота этажа над нулевой отметкой
+    size_t              numofelements;  ///< Количство элементов на этаже
 } bim_json_level_t;
 
 /// Структура, описывающая здание
 typedef struct
 {
-    char                *name;          ///< [JSON] Название здания
-    uint8_t             numoflevels;    ///< Количество уровней в здании
+    bim_json_address_t  *address;       ///< [JSON] Информация о местоположении объекта
+    const char          *name;          ///< [JSON] Название здания
     bim_json_level_t    *levels;        ///< [JSON] Массив уровней здания
-    bim_json_address_t  address;        ///< [JSON] Информация о местоположении объекта
+    size_t              numoflevels;    ///< Количество уровней в здании
 } bim_json_object_t;
 
 /*!
@@ -97,7 +100,7 @@ typedef struct
 \param[in] filename Имя файла
 \returns Указатель на объект типа bim_object_t
 */
-const bim_json_object_t*  bim_json_new        (const char* filename);
+const bim_json_object_t*  bim_json_new        (const char *filename);
 
 /*!
 Копирует объект типа bim_object_t и возвращает указатель на новый объект
@@ -112,6 +115,6 @@ const bim_json_object_t*  bim_json_copy       (const bim_json_object_t *bim_obje
 
 \param[in] bim_object Объект типа bim_object_t
 */
-void           bim_json_free     (bim_json_object_t* bim_object);
+void           bim_json_free     (bim_json_object_t *bim_object);
 
 #endif //BIM_JSON_OBJECT_H
