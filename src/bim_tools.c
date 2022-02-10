@@ -21,9 +21,9 @@ int32_t     _transit_id_cmp (const ArrayListValue value1, const ArrayListValue v
 bim_zone_t* _outside_init   (const bim_json_object_t *bim_json);
 int         _calculate_transits_width(ArrayList *zones, ArrayList *transits);
 
-bim_t* bim_tools_new(const bim_json_object_t *bim_json)
+bim_t* bim_tools_new(const bim_json_object_t *const bim_json)
 {
-    bim_json_object_t* jbim = (bim_json_object_t *)bim_json;
+    const bim_json_object_t* const jbim = bim_json;
 
     bim_t *bim = NULL;
     bim = (bim_t *)calloc(1, sizeof(bim_t));
@@ -554,7 +554,7 @@ bim_zone_t* _outside_init(const bim_json_object_t * bim_json)
     return outside;
 }
 
-bim_t* bim_tools_copy    (const bim_t* bim)
+bim_t* bim_tools_copy    (const bim_t * const bim)
 {
     return (bim_t *)bim;
 }
@@ -599,16 +599,20 @@ double  bim_tools_get_numofpeople(const bim_t *bim)
     return numofpeople;
 }
 
-double bim_tools_get_area_bim(const bim_t* bim)
+double bim_tools_get_area_bim(const bim_t * const bim)
 {
-    double area = 0;
-    for (size_t i = 0; i < bim->numoflevels; i++)
+    static double area = -1;
+    if (area < 0)
     {
-        for (size_t j = 0; j < bim->levels[i].numofzones; j++)
+        area = 0;
+        for (size_t i = 0; i < bim->numoflevels; i++)
         {
-            bim_zone_t zone = bim->levels[i].zones[j];
-            if (zone.sign == ROOM || zone.sign == STAIRCASE)
-                area += bim->levels[i].zones[j].area;
+            for (size_t j = 0; j < bim->levels[i].numofzones; j++)
+            {
+                bim_zone_t zone = bim->levels[i].zones[j];
+                if (zone.sign == ROOM || zone.sign == STAIRCASE)
+                    area += bim->levels[i].zones[j].area;
+            }
         }
     }
     return area;
@@ -627,23 +631,14 @@ void bim_tools_print_element(const bim_zone_t *zone)
     printf("\t%s: %u\n", "Is blocked", zone->is_blocked);
 }
 
-void bim_tools_lists_delete (ArrayList ** lists)
-{
-    for (size_t i = 0; i < 5; i++)
-    {
-        arraylist_free(lists[i]);
-    }
-    free(lists);
-}
-
 // -------------------------------------------------------
 // *******************************************************
 // -------------------------------------------------------
 
 int32_t _zone_id_cmp (const ArrayListValue value1, const ArrayListValue value2)
 {
-    const bim_zone_t *e1 = value1;
-    const bim_zone_t *e2 = value2;
+    const bim_zone_t *e1 = (bim_zone_t *)value1;
+    const bim_zone_t *e2 = (bim_zone_t *)value2;
     if (e1->id > e2->id) return 1;
     else if (e1->id < e2->id) return -1;
     else return 0;
@@ -651,8 +646,8 @@ int32_t _zone_id_cmp (const ArrayListValue value1, const ArrayListValue value2)
 
 int32_t _transit_id_cmp (const ArrayListValue value1, const ArrayListValue value2)
 {
-    const bim_transit_t *e1 = value1;
-    const bim_transit_t *e2 = value2;
+    const bim_transit_t *e1 = (bim_transit_t *)value1;
+    const bim_transit_t *e2 = (bim_transit_t *)value2;
     if (e1->id > e2->id) return 1;
     else if (e1->id < e2->id) return -1;
     else return 0;

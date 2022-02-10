@@ -25,8 +25,8 @@
 #include "bim_tools.h"
 
 typedef struct graph bim_graph_t;
-typedef struct node bim_node;
-typedef struct edge bim_edge;
+typedef struct node  bim_node_t;
+typedef struct edge  bim_edge_t;
 
 //https://www.techiedelight.com/implement-graph-data-structure-c
 
@@ -34,27 +34,28 @@ typedef struct edge bim_edge;
 struct graph
 {
     // An array of pointers to Node to represent an adjacency list
-    bim_node**  head;
-    uint64_t    node_count;
+    bim_node_t**  head;
+    size_t        node_count;
 };
 
 // Data structure to store adjacency list nodes of the graph
 struct node
 {
-    uint64_t    dest;
-    uint64_t    eid; // edge id
-    bim_node*   next;
+    size_t      dest;
+    size_t      eid; // edge id
+    bim_node_t* next;
 };
 
 // Data structure to store a graph edge
-struct edge {
-    uint64_t src;
-    uint64_t dest;
-    uint64_t id;
+struct edge
+{
+    size_t src;
+    size_t dest;
+    size_t id;
 };
 
-bim_graph_t*  bim_graph_new    (const bim_t *bim);
-void        bim_graph_print  (const bim_graph_t *graph);
-void        bim_graph_free   (bim_graph_t* graph);
+bim_graph_t*  bim_graph_new    (const bim_t *const bim);
+void          bim_graph_print  (const bim_graph_t *const graph);
+void          bim_graph_free   (bim_graph_t* graph);
 
 #endif //BIM_GRAPH_H
