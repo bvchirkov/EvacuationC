@@ -65,10 +65,12 @@ typedef struct
     double      numofpeople;    ///< Количество людей в элементе
     double      potential;      ///< Время достижения безопасной зоны
     double      area;           ///< Площадь элемента
+    uint8_t     hazard_level;   ///< Уровень опасности, % (0, 10, 20, ..., 90, 100)
     uint8_t     sign;           ///< Тип элемента
     uint8_t     numofoutputs;   ///< Количество связанных с текущим элементов
     bool        is_visited;     ///< Признак посещения элемента
     bool        is_blocked;     ///< Признак недоступности элемента для движения
+    bool        is_safe;        ///< Признак безопасности зоны, т.е. в эту зону возможна эвакуация
 } bim_zone_t;
 
 /// Структура, описывающая этаж
@@ -101,7 +103,7 @@ void   bim_tools_free   (bim_t* bim);
 void    bim_tools_set_people_to_zone (bim_zone_t* element, float num_of_people);
 
 // Подсчитывает количество людей в здании по расширенной структуре
-double  bim_tools_get_numofpeople(const bim_t *bim);
+double  bim_tools_get_numofpeople(const bim_t * const bim);
 
 //Подсчитывает суммарную площадь элементов всего здания
 double  bim_tools_get_area_bim   (const bim_t *const bim);

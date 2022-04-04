@@ -15,26 +15,18 @@
 
 #include "bim_evac.h"
 
-static float evac_speed_max     = 100;  // м/мин
-static float evac_density_min   = 0.1;  // чел/м^2
-static float evac_density_max   = 5;    // чел/м^2
-static float evac_modeling_step = 0.01; // мин
+double evac_speed_max     = 100;  // м/мин
+double evac_density_min   = 0.1;  // чел/м^2
+double evac_density_max   = 5;    // чел/м^2
+double evac_modeling_step = 0.01; // мин
 
-static double _evac_time = 0;
+double _evac_time = 0;
 
-void evac_def_modeling_step(const bim_t *bim, uint64_t bim_element_count)
+void evac_def_modeling_step(const bim_t *bim)
 {
-    double numofpeople = 0;
-    for(size_t i = 0; i < bim->object->numoflevels; i++)
-    {
-        for (size_t j = 0; j < bim->object->levels[i].zone_count; j++)
-        {
-            const bim_zone_t *zone = &bim->object->levels[i].zones[j];
-            numofpeople += zone->area;
-        }
-    }
+    double area = bim_tools_get_area_bim(bim);
 
-    double averageSize = numofpeople / bim_element_count;
+    double averageSize = area / bim->zones->length;
     double hxy = sqrt(averageSize);             // характерный размер области, м
     evac_modeling_step = (evac_modeling_step == 0) ? hxy / evac_speed_max * 0.1 : evac_modeling_step;      // Шаг моделирования, мин
 }
@@ -56,8 +48,8 @@ static inline double velocity(double v0, double a, double d, double d0)
 
 /**
  * @brief _speed_through_door
- * @param transit_width            ширина проема, м
- * @param density_in_zone    плотность в элементе, чел/м2
+ * @param transit_width     ширина проема, м
+ * @param density_in_zone   плотность в элементе, чел/м2
  * @return                  скорость потока в проеме в зависимости от плотности, м/мин
  */
 static double speed_through_transit(double transit_width, double density_in_zone, double v_max)
@@ -136,15 +128,15 @@ static double evac_speed_on_stair(double density_in_zone, int direction)
 static double speed_in_element(const bim_zone_t *receiving_zone,  // принимающая зона
                                const bim_zone_t *giver_zone)      // отдающая зона
 {
-    double density_in_giver_zone = giver_zone->num_of_people / giver_zone->area;
+    double density_in_giver_zone = giver_zone->numofpeople / giver_zone->area;
     // По умолчанию, используется скорость движения по горизонтальной поверхности
     double v_zone = speed_in_room(density_in_giver_zone, evac_speed_max);
 
-    double dh = receiving_zone->base->z_level - giver_zone->base->z_level;   // Разница высот зон
+    double dh = receiving_zone->z_level - giver_zone->z_level;   // Разница высот зон
 
     // Если принимающее помещение является лестницей и находится на другом уровне,
     // то скорость будет рассчитываться как по наклонной поверхности
-    if (fabs(dh) > 1e-3 && receiving_zone->base->sign == STAIRCASE)
+    if (fabs(dh) > 1e-3 && receiving_zone->sign == STAIRCASE)
     {
       /* Иначе определяем направление движения по лестнице
        * -1 вниз, 1 вверх
@@ -161,7 +153,7 @@ static double speed_in_element(const bim_zone_t *receiving_zone,  // прини�
     }
 
     if (v_zone < 0)
-        LOG_ERROR("Скорость в отдающей зоне меньше 0: %s", giver_zone->base->name);
+        LOG_ERROR("Скорость в отдающей зоне меньше 0: %s", giver_zone->name);
 
     return v_zone;
 }
@@ -172,7 +164,7 @@ static double speed_at_exit( const bim_zone_t *receiving_zone,  // приним�
 {
     // Определение скорости на выходе из отдающего помещения
     double zone_speed = speed_in_element(receiving_zone, giver_zone);
-    double density_in_giver_element = giver_zone->num_of_people / giver_zone->area;
+    double density_in_giver_element = giver_zone->numofpeople / giver_zone->area;
     double transition_speed = speed_through_transit(transit_width, density_in_giver_element, evac_speed_max);
     double exit_speed = fmin(zone_speed, transition_speed);
 
@@ -183,7 +175,7 @@ static double change_numofpeople(const bim_zone_t *giver_zone,
                                  double      transit_width,
                                  double      speed_at_exit)     // Скорость перехода в принимающую зону
 {
-    double densityInElement = giver_zone->num_of_people / giver_zone->area;
+    double densityInElement = giver_zone->numofpeople / giver_zone->area;
     // Величина людского потока, через проем шириной aWidthDoor, чел./мин
     double P = densityInElement * speed_at_exit * transit_width;
     // Зная скорость потока, можем вычислить конкретное количество человек,
@@ -216,7 +208,7 @@ static double part_people_flow( const bim_zone_t    *receiving_zone,  // при�
                                 const bim_transit_t *transit)
 {
     double area_giver_zone = giver_zone->area;
-    double people_in_giver_zone = giver_zone->num_of_people;
+    double people_in_giver_zone = giver_zone->numofpeople;
     double density_in_giver_zone= people_in_giver_zone / area_giver_zone;
     double density_min_giver_zone = evac_density_min > 0 ? evac_density_min : 0.5 / area_giver_zone;
 
@@ -240,7 +232,7 @@ static double part_people_flow( const bim_zone_t    *receiving_zone,  // при�
     // => если может вместить больше, чем может выйти, то вмещает всех вышедших,
     // иначе вмещает только возможное количество.
     double max_numofpeople = evac_density_max * receiving_zone->area;
-    double capacity_reciving_zone = max_numofpeople - receiving_zone->num_of_people;
+    double capacity_reciving_zone = max_numofpeople - receiving_zone->numofpeople;
     // Такая ситуация возникает при плотности в принимающем помещении более Dmax чел./м2
     // Фактически capacity_reciving_zone < 0 означает, что помещение не может принять людей
     if (capacity_reciving_zone < 0)
@@ -256,7 +248,7 @@ static void reset_zones(const ArrayList *zones)
     {
         bim_zone_t *zone = zones->data[i];
         zone->is_visited = false;
-        zone->potential = (zone->base->sign == OUTSIDE) ? 0 : __FLT_MAX__;
+        zone->potential = (zone->sign == OUTSIDE) ? 0 : __FLT_MAX__;
     }
 }
 
@@ -266,13 +258,13 @@ static void reset_transits(const ArrayList *transits)
     {
         bim_transit_t *transit = transits->data[i];
         transit->is_visited = false;
-        transit->num_of_people = 0;
+        transit->nop_proceeding = 0;
     }
 }
 
 static int elementideq_callback(const ArrayListValue value1, const ArrayListValue value2)
 {
-    return ((bim_zone_t *)value1)->base->id == ((bim_zone_t *)value2)->base->id;
+    return ((bim_zone_t *)value1)->id == ((bim_zone_t *)value2)->id;
 }
 
 static int potentialcmp_callback (const ArrayListValue value1, const ArrayListValue value2)
@@ -289,13 +281,13 @@ void evac_moving_step(const bim_graph_t *graph, const ArrayList *zones, const Ar
     ArrayList *zones_to_process = arraylist_new(unprocessed_zones_count);
 
     uint64_t outside_id = graph->node_count - 1;
-    bim_node* ptr = graph->head[outside_id];
+    bim_node_t *ptr = graph->head[outside_id];
     bim_zone_t *outside = zones->data[outside_id];
     bim_zone_t *receiving_zone = outside;
 
     while (1)
     {
-        for (size_t i = 0; i < receiving_zone->base->numofoutputs && ptr != NULL; i++, ptr = ptr->next)
+        for (size_t i = 0; i < receiving_zone->numofoutputs && ptr != NULL; i++, ptr = ptr->next)
         {
             bim_transit_t *transit = transits->data[ptr->eid];
             if (transit->is_visited || transit->is_blocked) continue;
@@ -304,14 +296,14 @@ void evac_moving_step(const bim_graph_t *graph, const ArrayList *zones, const Ar
 
             receiving_zone->potential = potential_element(receiving_zone, giver_zone, transit);
             double moved_people = part_people_flow(receiving_zone, giver_zone, transit);
-            receiving_zone->num_of_people += moved_people;
-            giver_zone->num_of_people -= moved_people;
-            transit->num_of_people = moved_people;
+            receiving_zone->numofpeople += moved_people;
+            giver_zone->numofpeople -= moved_people;
+            transit->nop_proceeding = moved_people;
 
             giver_zone->is_visited = true;
             transit->is_visited = true;
 
-            if (giver_zone->base->numofoutputs > 1 && !giver_zone->is_blocked
+            if (giver_zone->numofoutputs > 1 && !giver_zone->is_blocked
                 && arraylist_index_of(zones_to_process, elementideq_callback, giver_zone) < 0)
             {
                 arraylist_append(zones_to_process, giver_zone);
@@ -323,7 +315,7 @@ void evac_moving_step(const bim_graph_t *graph, const ArrayList *zones, const Ar
         if (zones_to_process->length > 0)
         {
             receiving_zone = zones_to_process->data[0];
-            ptr = graph->head[receiving_zone->base->id];
+            ptr = graph->head[receiving_zone->id];
             arraylist_remove(zones_to_process, 0);
         }
 
@@ -334,22 +326,22 @@ void evac_moving_step(const bim_graph_t *graph, const ArrayList *zones, const Ar
     arraylist_free(zones_to_process);
 }
 
-void evac_set_speed_max(float val)
+void evac_set_speed_max(double val)
 {
     evac_speed_max = val;
 }
 
-void evac_set_density_min(float val)
+void evac_set_density_min(double val)
 {
     evac_density_min = val;
 }
 
-void evac_set_density_max(float val)
+void evac_set_density_max(double val)
 {
     evac_density_max = val;
 }
 
-void evac_set_modeling_step(float val)
+void evac_set_modeling_step(double val)
 {
     evac_modeling_step = val;
 }

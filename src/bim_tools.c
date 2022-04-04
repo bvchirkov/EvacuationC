@@ -161,7 +161,9 @@ bim_t* bim_tools_new(const bim_json_object_t *const bim_json)
                 zone->area = geom_tools_area_polygon(zone->polygon);
                 zone->is_blocked = false;
                 zone->is_visited = false;
+                zone->is_safe    = false;
                 zone->potential  = __FLT_MAX__;
+                zone->hazard_level = 0;
                 arraylist_append(zones_list, zone);
                 numofzones++;
             }
@@ -517,6 +519,8 @@ bim_zone_t* _outside_init(const bim_json_object_t * bim_json)
     outside->z_level = 0;
     outside->size_z = __FLT_MAX__;
     outside->numofpeople = 0;
+    outside->hazard_level = 0;
+    outside->is_safe = true;
 
     size_t numofoutputs = 0;
     uuid_t *outputs = (uuid_t*)malloc(sizeof (uuid_t) * 100);
@@ -571,7 +575,7 @@ void bim_tools_free (bim_t* bim)
     bim_zone_t *outside = (bim_zone_t *)bim->zones->data[0];
     free(outside->name);
     free(outside->outputs);
-    free(outside);
+//    free(outside);
 
     free(bim->name);
 
@@ -585,7 +589,7 @@ void bim_tools_set_people_to_zone(bim_zone_t* zone, float num_of_people)
     zone->numofpeople = num_of_people;
 }
 
-double  bim_tools_get_numofpeople(const bim_t *bim)
+double  bim_tools_get_numofpeople(const bim_t *const bim)
 {
     double numofpeople = 0;
     for(size_t i = 0; i < bim->numoflevels; i++)
