@@ -30,9 +30,7 @@
 #include <stdint.h>
 #include "bim_polygon_tools.h"
 #include "logger.h"
-
-/// Количество символов в UUID + NUL символ
-#define UUID_SIZE 36 + 1
+#include "bim_uuid.h"
 
 /// Набор возможных типов элеметов здания:
 /// ROOM, STAIR, DOOR_WAY, DOOR_WAY_INT, DOOR_WAY_OUT, OUTSIDE
@@ -47,11 +45,6 @@ typedef enum
     OUTSIDE,        ///< Указывает, что элемент является зоной вне здания
     UNDEFINDED      ///< Указывает, что тип элемента не определен
 } bim_element_sign_t;
-
-typedef struct
-{
-    const char x[UUID_SIZE];
-} uuid_t;
 
 /// Структура, описывающая элемент
 typedef struct

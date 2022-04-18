@@ -34,6 +34,8 @@ bim_level_element_t, и функции для работы с моделью з�
 #include "arraylist.h"          ///< https://github.com/fragglet/c-algorithms
 #include "bim_json_object.h"
 
+#define OUTSIDE_IDX(x) (x->zones->length - 1)
+
 /// Структура, расширяющая элемент DOOR_*
 typedef struct
 {

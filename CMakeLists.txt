@@ -20,8 +20,10 @@ add_executable(${PROJECT_NAME}
     src/bim_graph.c         src/bim_graph.h
     src/bim_evac.c          src/bim_evac.h
     src/bim_polygon_tools.c src/bim_polygon_tools.h
-#    src/bim_configure.c     src/bim_configure.h
+    src/bim_configure.c     src/bim_configure.h
     src/bim_json_object.c   src/bim_json_object.h
+    src/bim_cli.c           src/bim_cli.h
+                            src/bim_uuid.h
     src/main.c
     )
 

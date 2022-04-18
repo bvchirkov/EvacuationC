@@ -15,12 +15,12 @@
 
 #include "bim_evac.h"
 
-double evac_speed_max     = 100;  // м/мин
-double evac_density_min   = 0.1;  // чел/м^2
-double evac_density_max   = 5;    // чел/м^2
-double evac_modeling_step = 0.01; // мин
+static double evac_speed_max     = 100;  // м/мин
+static double evac_density_min   = 0.1;  // чел/м^2
+static double evac_density_max   = 5;    // чел/м^2
+static double evac_modeling_step = 0.01; // мин
 
-double _evac_time = 0;
+static double _evac_time = 0;
 
 void evac_def_modeling_step(const bim_t *bim)
 {

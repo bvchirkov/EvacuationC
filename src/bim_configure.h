@@ -1,4 +1,4 @@
-/* Copyright © 2021 bvchirkov
+/* Copyright © 2022 bvchirkov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,48 @@
 #ifndef BIMCONF_H
 #define BIMCONF_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include <stdint.h>
+#include <string.h>
+#include "json-c/json.h"        ///< https://github.com/rbtylee/tutorial-jsonc/blob/master/tutorial/index.md
+#include "bim_uuid.h"
 
-enum cfg_distr
+#define UUID_SIZE 36 + 1
+
+enum distribution_type
 {
-    Distribution_BIM,
-    Distribution_UNIFORM
+    distribution_from_bim,
+    distribution_uniform
 };
 
-enum cfg_transit_width
+enum transits_width_type
 {
-    TransitWidth_BIM,
-    TransitWidth_SPECIAL
+    transits_width_from_bim,
+    transits_width_users
 };
 
 typedef struct
 {
-    enum cfg_distr type;
-    float density;
-} _distribution;
+    uuid_t  *uuid;
+    uint8_t num_of_uuids;
+    float   value;
+} special_t;
 
 typedef struct
 {
-    enum cfg_transit_width type;
-    float doorway_in;
-    float doorway_out;
-} _transit;
+    enum distribution_type  type;
+    float                   density;
+    special_t               *special;
+    uint8_t                 num_of_special_blocks;
+} bim_cfg_distribution_t;
+
+typedef struct
+{
+    enum transits_width_type    type;
+    float                       doorwayin;
+    float                       doorwayout;
+    special_t                   *special;
+    uint8_t                     num_of_special_blocks;
+} bim_cfg_transitions_width_t;
 
 typedef struct
 {
@@ -51,36 +65,24 @@ typedef struct
     float speed_max;
     float density_min;
     float density_max;
-} _modeling;
+} bim_cfg_modeling_t;
 
-extern _modeling        cfg_modeling;
-extern _transit         cfg_transit;
-extern _distribution    cfg_distribution;
+typedef struct
+{
+    char x[256];
+} bim_cfg_file_name_t;
 
-/**
- * The following is the configurable key/value list.
- * ┌─────────────────────┬──────────────────────────────────────────────────┐
- * │key                  │ value                                            │
- * ├:--------------------┼:-------------------------------------------------┤
- * │distribution         │ BIM or UNIFORM                                   │
- * │distribution.density │ Плотность распределения людей, чел./м^2 (max = 9)│
- * │                     │                                                  │
- * │transit              │ BIM or SPECIAL                                   │
- * │transit.doorway.in   │ Ширина внутренних переходов (двери)              │
- * │transit.doorway.out  │ Ширина выходов из здания                         │
- * │                     │                                                  │
- * │modeling.step        │ Шаг моделирования                                │
- * │modeling.speed.max   │ Максимальная скорость движения людей             │
- * │modeling.density.min │ Минимальное значение плотности                   │
- * │modeling.density.max │ Максимальное значение плотности                  │
- * └─────────────────────┴──────────────────────────────────────────────────┘
- * @param[in] filename The name of the configuration file
- * @return Non-zero value upon success or 0 on error
- */
-int bim_configure(const char* filename);
+typedef struct
+{
+    bim_cfg_file_name_t         *bim_jsons;
+    uint8_t                     num_of_bim_jsons;
+    bim_cfg_distribution_t      distribution;
+    bim_cfg_transitions_width_t transits;
+    bim_cfg_modeling_t          modeling;
+} bim_cfg_scenario_t;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif /* __cplusplus */
+
+const bim_cfg_scenario_t*   bim_cfg_load    (const char *filename);
+void                        bim_cfg_unload  (bim_cfg_scenario_t* bim_cfg_scenario);
 
 #endif /* BIMCONF_H */
