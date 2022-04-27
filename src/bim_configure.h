@@ -69,12 +69,13 @@ typedef struct
 
 typedef struct
 {
-    char x[256];
+    const char x[256];
 } bim_cfg_file_name_t;
 
 typedef struct
 {
     bim_cfg_file_name_t         *bim_jsons;
+    bim_cfg_file_name_t         logger_configure;
     uint8_t                     num_of_bim_jsons;
     bim_cfg_distribution_t      distribution;
     bim_cfg_transitions_width_t transits;

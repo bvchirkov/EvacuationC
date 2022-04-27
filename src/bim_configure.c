@@ -34,14 +34,16 @@ const bim_cfg_scenario_t*   bim_cfg_load    (const char *filename)
         return NULL;
     }
 
-    json_object *j_bim            = NULL;
-    json_object *j_distribution   = NULL;
-    json_object *j_transits       = NULL;
-    json_object *j_modeling       = NULL;
-    json_object_object_get_ex(root, "bim",          &j_bim);
-    json_object_object_get_ex(root, "distribution", &j_distribution);
-    json_object_object_get_ex(root, "transits",     &j_transits);
-    json_object_object_get_ex(root, "modeling",     &j_modeling);
+    json_object *j_bim              = NULL;
+    json_object *j_logger_configure = NULL;
+    json_object *j_distribution     = NULL;
+    json_object *j_transits         = NULL;
+    json_object *j_modeling         = NULL;
+    json_object_object_get_ex(root, "bim",              &j_bim);
+    json_object_object_get_ex(root, "logger_configure", &j_logger_configure);
+    json_object_object_get_ex(root, "distribution",     &j_distribution);
+    json_object_object_get_ex(root, "transits",         &j_transits);
+    json_object_object_get_ex(root, "modeling",         &j_modeling);
 
     uint8_t num_of_bims = json_object_array_length(j_bim);
     bim_cfg_file_name_t *bims = (bim_cfg_file_name_t*) malloc(sizeof (bim_cfg_file_name_t) * num_of_bims);
@@ -54,10 +56,11 @@ const bim_cfg_scenario_t*   bim_cfg_load    (const char *filename)
     for (size_t i = 0; i < num_of_bims; i++)
     {
         json_object *j_bim_item = json_object_array_get_idx(j_bim, i);
-        strcpy(bims[i].x, json_object_get_string(j_bim_item));
+        strcpy((void*)bims[i].x, json_object_get_string(j_bim_item));
     }
     cfg_scenarion->bim_jsons = bims;
     cfg_scenarion->num_of_bim_jsons = num_of_bims;
+    strcpy((void*)cfg_scenarion->logger_configure.x, json_object_get_string(j_logger_configure));
 
     json_object *j_distribution_type      = NULL;
     json_object *j_distribution_density   = NULL;

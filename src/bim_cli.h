@@ -27,10 +27,7 @@ typedef struct
 //    char *logger_config;
 } cli_params_t;
 
-// Справка по использованию аргументов программы
-void usage(const char *argv0, int exitval, const char *errmsg);
-
 // Обработка аргументов командной строки
-const cli_params_t* chooser(int argc, char** argv);
+const cli_params_t* read_cl_args(int argc, char** argv);
 
 #endif // BIM_CLI_H

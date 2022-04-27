@@ -24,6 +24,7 @@ add_executable(${PROJECT_NAME}
     src/bim_json_object.c   src/bim_json_object.h
     src/bim_cli.c           src/bim_cli.h
                             src/bim_uuid.h
+    src/bim_output.c        src/bim_output.h
     src/main.c
     )
 

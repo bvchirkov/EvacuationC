@@ -42,16 +42,18 @@ bim_graph_t *bim_graph_new(const bim_t *const bim)
 // Function to print adjacency list representation of a graph
 void bim_graph_print(const bim_graph_t *const graph)
 {
+    LOG_TRACE("-------------------------------------------------------------");
+    LOG_TRACE("It is printed the graph struct [room_id —(door_id)-> room_id]");
     for (size_t i = 0; i < graph->node_count; i++)
     {
         // print current vertex and all its neighbors
         const bim_node_t *ptr = graph->head[i];
         while (ptr != NULL)
         {
-            printf("%zu —(%lu)-> %lu\t", i, ptr->eid, ptr->dest);
+            LOG_TRACE("%zu —(%lu)-> %lu\t", i, ptr->eid, ptr->dest);
             ptr = ptr->next;
         }
-        printf("\n");
+        LOG_TRACE("");
     }
 }
 

@@ -17,7 +17,8 @@
 
 static cli_params_t cli_params;
 
-void usage(const char *argv0, int exitval, const char *errmsg)
+// Справка по использованию аргументов программы
+static void usage(const char *argv0, int exitval, const char *errmsg)
 {
     FILE *fp = stdout;
     if (exitval != 0)
@@ -31,7 +32,7 @@ void usage(const char *argv0, int exitval, const char *errmsg)
     exit(exitval);
 }
 
-const cli_params_t* chooser(int argc, char** argv)
+const cli_params_t* read_cl_args(int argc, char** argv)
 {
     int c;
     while ((c = getopt(argc, argv, "s:h")) != -1)
