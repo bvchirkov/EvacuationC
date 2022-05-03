@@ -1,0 +1,45 @@
+{
+  "bim": [
+    "/home/boris/workspace/c/EvacuationC/res/one_zone.json",
+    "/home/boris/workspace/c/EvacuationC/res/b1.json",
+    "/home/boris/workspace/c/EvacuationC/res/zones.json",
+    "/home/boris/workspace/c/EvacuationC/res/two_levels.json",
+    "/home/boris/workspace/c/EvacuationC/res/one_zone_one_exit.json",
+    "/home/boris/workspace/c/EvacuationC/res/three_zone_three_transit.json",
+    "/home/boris/workspace/c/EvacuationC/res/building_test.json"
+  ],
+  "logger_configure": "/home/boris/workspace/c/EvacuationC/logger.conf",
+  "distribution": {
+    "type":"uniform",
+    "density": 0.1,
+    "special": [
+        {
+            "uuid": [
+            "87c49613-44a7-4f3f-82e0-fb4a9ca2f46d"
+            ],
+            "density": 1.0,
+            "_comment": "The uuid is Room_1 by three_zone_three_transit"
+        }
+    ]
+  },
+  "transits": {
+    "type": "from_bim",
+    "doorwayin": 0,
+    "doorwayout": 0,
+    "special": [
+        {
+            "uuid": [
+            "dcbd8b6e-6dd0-4583-8aac-2492797f8032"
+            ],
+            "width": 1.5,
+            "_comment": "The uuid is output by three_zone_three_transit"
+        }
+    ]
+  },
+  "modeling": {
+    "step": 0.01,
+    "speed_max": 100,
+    "density_min": 0.1,
+    "density_max": 5
+  }
+}
