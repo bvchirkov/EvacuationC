@@ -1,14 +1,11 @@
 {
   "bim": [
-    "/home/boris/workspace/c/EvacuationC/res/one_zone.json",
-    "/home/boris/workspace/c/EvacuationC/res/b1.json",
-    "/home/boris/workspace/c/EvacuationC/res/zones.json",
-    "/home/boris/workspace/c/EvacuationC/res/two_levels.json",
-    "/home/boris/workspace/c/EvacuationC/res/one_zone_one_exit.json",
-    "/home/boris/workspace/c/EvacuationC/res/three_zone_three_transit.json",
-    "/home/boris/workspace/c/EvacuationC/res/building_test.json"
+    "../res/two_levels.json",
+    "../res/one_zone_one_exit.json",
+    "../res/three_zone_three_transit.json",
+    "../res/building_test.json"
   ],
-  "logger_configure": "/home/boris/workspace/c/EvacuationC/logger.conf",
+  "logger_configure": "../logger.conf",
   "distribution": {
     "type":"uniform",
     "density": 0.1,
