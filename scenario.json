@@ -3,7 +3,8 @@
     "../res/two_levels.json",
     "../res/one_zone_one_exit.json",
     "../res/three_zone_three_transit.json",
-    "../res/building_test.json"
+    "../res/building_test.json",
+    "../res/udsu_block_1.json"
   ],
   "logger_configure": "../logger.conf",
   "distribution": {
