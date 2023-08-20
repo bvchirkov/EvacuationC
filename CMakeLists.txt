@@ -64,7 +64,7 @@ target_link_libraries(${PROJECT_NAME}
         triangle
         pthread
         arraylist
-        json-c
+        json-c-static
         m
 )
 

@@ -1,7 +1,6 @@
 *
 
 !.gitignore
-!.gitmodules
 
 !CMakeLists.txt
 !cmake
