@@ -14,7 +14,7 @@
  */
 
 #include "bim_json_object.h"
-#include "../json-c/json.h"        ///< https://github.com/rbtylee/tutorial-jsonc/blob/master/tutorial/index.md
+#include "json.h"        ///< https://github.com/rbtylee/tutorial-jsonc/blob/master/tutorial/index.md
 
 #define streq(str1, str2) strcmp(str1, str2) == 0
 

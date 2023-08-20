@@ -1,6 +1,16 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(EvacuationC LANGUAGES C VERSION 0.1.0)
+project(EvacuationC
+    VERSION 0.1.0
+    LANGUAGES C
+    DESCRIPTION "Evacuation modeling"
+    HOMEPAGE_URL https://github.com/bvchirkov/EvacuationC
+)
+
+set(CMAKE_PROJECT_INCLUDE_BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Policy.cmake)
+
+include(ExternalProject)
+include(FetchContent)
 
 option(build_tests "Build all of own tests" OFF)
 
@@ -28,12 +38,24 @@ add_executable(${PROJECT_NAME}
     src/main.c
     )
 
+FetchContent_Declare(
+    c-logger
+    GIT_REPOSITORY https://github.com/NikBel3476/c-logger.git
+    GIT_TAG f02747287296b5a0da1cc2b9d7f4e98a3be444d9 # upstream/master
+)
+
+FetchContent_Declare(
+    json-c
+    GIT_REPOSITORY https://github.com/json-c/json-c.git
+    GIT_TAG b4c371fa0cbc4dcbaccc359ce9e957a22988fb34 # json-c-0.17-20230812
+)
+
+FetchContent_MakeAvailable(c-logger json-c)
+
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ./thirdparty/triangle
         ./thirdparty/arraylist
-        ./thirdparty/json-c
-        ./thirdparty/c-logger
     )
 
 target_link_libraries(${PROJECT_NAME}
@@ -44,18 +66,11 @@ target_link_libraries(${PROJECT_NAME}
         arraylist
         json-c
         m
-    "-static"
-    )
+)
 
 
 add_subdirectory(thirdparty/triangle)
 add_subdirectory(thirdparty/arraylist)
-add_subdirectory(thirdparty/c-logger)
-
-set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-#set(BUILD_STATIC_LIBS ON)
-set(BUILD_SHARED_LIBS OFF)
-add_subdirectory(thirdparty/json-c)
 
 ### Test
 if(build_tests)

@@ -4,6 +4,8 @@
 !.gitmodules
 
 !CMakeLists.txt
+!cmake
+!cmake/Policy.cmake
 
 !src/
 !src/*.c
