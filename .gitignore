@@ -6,6 +6,10 @@
 !cmake
 !cmake/Policy.cmake
 
+!.github/
+!.github/workflows/
+!.github/workflows/build.yml
+
 !src/
 !src/*.c
 !src/*.h
