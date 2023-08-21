@@ -252,8 +252,8 @@ bim_t* bim_tools_new(const bim_json_object_t *const bim_json)
             fprintf(stderr, "[func: %s() | line: %u] :: zone_count (%u) or transit_count (%u) is zero\n", __func__, __LINE__, level->numofzones, level->numoftransits);
         else
         {
-            level->zones    = (bim_zone_t*)   reallocarray(level->zones,    level->numofzones,    sizeof (bim_zone_t));
-            level->transits = (bim_transit_t*)reallocarray(level->transits, level->numoftransits, sizeof (bim_transit_t));
+            level->zones    = (bim_zone_t*)   realloc(level->zones,    level->numofzones    * sizeof (bim_zone_t));
+            level->transits = (bim_transit_t*)realloc(level->transits, level->numoftransits * sizeof (bim_transit_t));
         }
     }
 
@@ -548,7 +548,7 @@ bim_zone_t* _outside_init(const bim_json_object_t * bim_json)
     }
 
     outside->numofoutputs = numofoutputs;
-    outside->outputs = (uuid_t*)reallocarray(outputs, outside->numofoutputs, sizeof (uuid_t));
+    outside->outputs = (uuid_t*)realloc(outputs, outside->numofoutputs * sizeof (uuid_t));
     outside->is_blocked = false;
     outside->is_visited = false;
     outside->potential = 0;
@@ -573,8 +573,8 @@ void bim_tools_free (bim_t* bim)
     }
     free(bim->levels);
     bim_zone_t *outside = (bim_zone_t *)bim->zones->data[0];
-    free(outside->name);
-    free(outside->outputs);
+//    free(outside->name);
+//    free(outside->outputs);
 //    free(outside);
 
     free(bim->name);

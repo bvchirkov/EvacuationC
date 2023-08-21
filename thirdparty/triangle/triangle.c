@@ -644,7 +644,7 @@ struct memorypool {
   int itembytes;
   int itemsperblock;
   int itemsfirstblock;
-  long items, maxitems;
+  long long items, maxitems;
   int unallocateditems;
   int pathitemsleft;
 };
@@ -661,7 +661,7 @@ REAL o3derrboundA, o3derrboundB, o3derrboundC;
 
 /* Random number seed is not constant, but I've made it global anyway.       */
 
-unsigned long randomseed;                     /* Current random number seed. */
+unsigned long long randomseed;                     /* Current random number seed. */
 
 
 /* Mesh data structure.  Triangle operates on only one mesh, but the mesh    */
@@ -704,11 +704,11 @@ struct mesh {
   int holes;                                       /* Number of input holes. */
   int regions;                                   /* Number of input regions. */
   int undeads;    /* Number of input vertices that don't appear in the mesh. */
-  long edges;                                     /* Number of output edges. */
+  long long edges;                                     /* Number of output edges. */
   int mesh_dim;                                /* Dimension (ought to be 2). */
   int nextras;                           /* Number of attributes per vertex. */
   int eextras;                         /* Number of attributes per triangle. */
-  long hullsize;                          /* Number of edges in convex hull. */
+  long long hullsize;                          /* Number of edges in convex hull. */
   int steinerleft;                 /* Number of Steiner points not yet used. */
   int vertexmarkindex;         /* Index to find boundary marker of a vertex. */
   int vertex2triindex;     /* Index to find a triangle adjacent to a vertex. */
@@ -718,14 +718,14 @@ struct mesh {
   int checksegments;         /* Are there segments in the triangulation yet? */
   int checkquality;                  /* Has quality triangulation begun yet? */
   int readnodefile;                           /* Has a .node file been read? */
-  long samples;              /* Number of random samples for point location. */
+  long long samples;              /* Number of random samples for point location. */
 
-  long incirclecount;                 /* Number of incircle tests performed. */
-  long counterclockcount;     /* Number of counterclockwise tests performed. */
-  long orient3dcount;           /* Number of 3D orientation tests performed. */
-  long hyperbolacount;      /* Number of right-of-hyperbola tests performed. */
-  long circumcentercount;  /* Number of circumcenter calculations performed. */
-  long circletopcount;       /* Number of circle top calculations performed. */
+  long long incirclecount;                 /* Number of incircle tests performed. */
+  long long counterclockcount;     /* Number of counterclockwise tests performed. */
+  long long orient3dcount;           /* Number of 3D orientation tests performed. */
+  long long hyperbolacount;      /* Number of right-of-hyperbola tests performed. */
+  long long circumcentercount;  /* Number of circumcenter calculations performed. */
+  long long circletopcount;       /* Number of circle top calculations performed. */
 
 /* Triangular bounding box vertices.                                         */
 
@@ -3902,7 +3902,7 @@ struct memorypool *pool;
 #endif /* not ANSI_DECLARATORS */
 
 {
-  unsigned long alignptr;
+  unsigned long long alignptr;
 
   pool->items = 0;
   pool->maxitems = 0;
@@ -4019,7 +4019,7 @@ struct memorypool *pool;
 {
   VOID *newitem;
   VOID **newblock;
-  unsigned long alignptr;
+  unsigned long long alignptr;
 
   /* First check the linked list of dead items.  If the list is not   */
   /*   empty, allocate an item from the list rather than a fresh one. */
@@ -4103,7 +4103,7 @@ struct memorypool *pool;
 #endif /* not ANSI_DECLARATORS */
 
 {
-  unsigned long alignptr;
+  unsigned long long alignptr;
 
   /* Begin the traversal in the first block. */
   pool->pathblock = pool->firstblock;
@@ -4140,7 +4140,7 @@ struct memorypool *pool;
 
 {
   VOID *newitem;
-  unsigned long alignptr;
+  unsigned long long alignptr;
 
   /* Stop upon exhausting the list of items. */
   if (pool->pathitem == pool->nextitem) {
@@ -4208,7 +4208,7 @@ int subsegbytes;
 #endif /* not ANSI_DECLARATORS */
 
 {
-  unsigned long alignptr;
+  unsigned long long alignptr;
 
   /* Set up `dummytri', the `triangle' that occupies "outer space." */
   m->dummytribase = (triangle *) trimalloc(trianglebytes +
@@ -4597,7 +4597,7 @@ int number;
 {
   VOID **getblock;
   char *foundvertex;
-  unsigned long alignptr;
+  unsigned long long alignptr;
   int current;
 
   getblock = m->vertices.firstblock;
@@ -6678,9 +6678,9 @@ struct mesh *m;
 /*****************************************************************************/
 
 #ifdef ANSI_DECLARATORS
-unsigned long randomnation(unsigned int choices)
+unsigned long long randomnation(unsigned int choices)
 #else /* not ANSI_DECLARATORS */
-unsigned long randomnation(choices)
+unsigned long long randomnation(choices)
 unsigned int choices;
 #endif /* not ANSI_DECLARATORS */
 
@@ -7660,11 +7660,11 @@ struct otri *searchtri;
   char *firsttri;
   struct otri sampletri;
   vertex torg, tdest;
-  unsigned long alignptr;
+  unsigned long long alignptr;
   REAL searchdist, dist;
   REAL ahead;
-  long samplesperblock, totalsamplesleft, samplesleft;
-  long population, totalpopulation;
+  long long samplesperblock, totalsamplesleft, samplesleft;
+  long long population, totalpopulation;
   triangle ptr;                         /* Temporary variable used by sym(). */
 
   if (b->verbose > 2) {
@@ -8710,7 +8710,7 @@ int triflaws;
             } else {
               /* Take the average of the two triangles' area constraints.    */
               /*   This prevents small area constraints from migrating a     */
-              /*   long, long way from their original location due to flips. */
+              /*   long long way from their original location due to flips. */
               area = 0.5 * (areabound(top) + areabound(horiz));
             }
             setareabound(top, area);
@@ -9917,9 +9917,9 @@ struct otri *farright;
 }
 
 #ifdef ANSI_DECLARATORS
-long removeghosts(struct mesh *m, struct behavior *b, struct otri *startghost)
+long long removeghosts(struct mesh *m, struct behavior *b, struct otri *startghost)
 #else /* not ANSI_DECLARATORS */
-long removeghosts(m, b, startghost)
+long long removeghosts(m, b, startghost)
 struct mesh *m;
 struct behavior *b;
 struct otri *startghost;
@@ -9930,7 +9930,7 @@ struct otri *startghost;
   struct otri dissolveedge;
   struct otri deadtriangle;
   vertex markorg;
-  long hullsize;
+  long long hullsize;
   triangle ptr;                         /* Temporary variable used by sym(). */
 
   if (b->verbose) {
@@ -9980,9 +9980,9 @@ struct otri *startghost;
 /*****************************************************************************/
 
 #ifdef ANSI_DECLARATORS
-long divconqdelaunay(struct mesh *m, struct behavior *b)
+long long divconqdelaunay(struct mesh *m, struct behavior *b)
 #else /* not ANSI_DECLARATORS */
-long divconqdelaunay(m, b)
+long long divconqdelaunay(m, b)
 struct mesh *m;
 struct behavior *b;
 #endif /* not ANSI_DECLARATORS */
@@ -10133,9 +10133,9 @@ struct behavior *b;
 #ifndef REDUCED
 
 #ifdef ANSI_DECLARATORS
-long removebox(struct mesh *m, struct behavior *b)
+long long removebox(struct mesh *m, struct behavior *b)
 #else /* not ANSI_DECLARATORS */
-long removebox(m, b)
+long long removebox(m, b)
 struct mesh *m;
 struct behavior *b;
 #endif /* not ANSI_DECLARATORS */
@@ -10146,7 +10146,7 @@ struct behavior *b;
   struct otri checkedge;
   struct otri nextedge, finaledge, dissolveedge;
   vertex markorg;
-  long hullsize;
+  long long hullsize;
   triangle ptr;                         /* Temporary variable used by sym(). */
 
   if (b->verbose) {
@@ -10232,9 +10232,9 @@ struct behavior *b;
 #ifndef REDUCED
 
 #ifdef ANSI_DECLARATORS
-long incrementaldelaunay(struct mesh *m, struct behavior *b)
+long long incrementaldelaunay(struct mesh *m, struct behavior *b)
 #else /* not ANSI_DECLARATORS */
-long incrementaldelaunay(m, b)
+long long incrementaldelaunay(m, b)
 struct mesh *m;
 struct behavior *b;
 #endif /* not ANSI_DECLARATORS */
@@ -10796,9 +10796,9 @@ int *farright;
 #ifndef REDUCED
 
 #ifdef ANSI_DECLARATORS
-long sweeplinedelaunay(struct mesh *m, struct behavior *b)
+long long sweeplinedelaunay(struct mesh *m, struct behavior *b)
 #else /* not ANSI_DECLARATORS */
-long sweeplinedelaunay(m, b)
+long long sweeplinedelaunay(m, b)
 struct mesh *m;
 struct behavior *b;
 #endif /* not ANSI_DECLARATORS */
@@ -11024,15 +11024,15 @@ struct behavior *b;
 /*****************************************************************************/
 
 #ifdef ANSI_DECLARATORS
-long delaunay(struct mesh *m, struct behavior *b)
+long long delaunay(struct mesh *m, struct behavior *b)
 #else /* not ANSI_DECLARATORS */
-long delaunay(m, b)
+long long delaunay(m, b)
 struct mesh *m;
 struct behavior *b;
 #endif /* not ANSI_DECLARATORS */
 
 {
-  long hulledges;
+  long long hulledges;
 
   m->eextras = 0;
   initializetrisubpools(m, b);
@@ -11125,10 +11125,10 @@ int numberofsegments;
 #else /* not TRILIBRARY */
 
 #ifdef ANSI_DECLARATORS
-long reconstruct(struct mesh *m, struct behavior *b, char *elefilename,
+long long reconstruct(struct mesh *m, struct behavior *b, char *elefilename,
                  char *areafilename, char *polyfilename, FILE *polyfile)
 #else /* not ANSI_DECLARATORS */
-long reconstruct(m, b, elefilename, areafilename, polyfilename, polyfile)
+long long reconstruct(m, b, elefilename, areafilename, polyfilename, polyfile)
 struct mesh *m;
 struct behavior *b;
 char *elefilename;
@@ -11172,9 +11172,9 @@ FILE *polyfile;
   int segmentmarkers;
   int boundmarker;
   int aroundvertex;
-  long hullsize;
+  long long hullsize;
   int notfound;
-  long elementnumber, segmentnumber;
+  long long elementnumber, segmentnumber;
   int i, j;
   triangle ptr;                         /* Temporary variable used by sym(). */
 
@@ -14369,7 +14369,7 @@ char **argv;
   FILE *outfile;
 #endif /* not TRILIBRARY */
   vertex vertexloop;
-  long outvertices;
+  long long outvertices;
   int vertexnumber;
   int i;
 
@@ -14541,7 +14541,7 @@ char **argv;
   struct otri triangleloop;
   vertex p1, p2, p3;
   vertex mid1, mid2, mid3;
-  long elementnumber;
+  long long elementnumber;
   int i;
 
 #ifdef TRILIBRARY
@@ -14683,11 +14683,11 @@ char **argv;
   int index;
 #else /* not TRILIBRARY */
   FILE *outfile;
-  long holenumber, regionnumber;
+  long long holenumber, regionnumber;
 #endif /* not TRILIBRARY */
   struct osub subsegloop;
   vertex endpoint1, endpoint2;
-  long subsegnumber;
+  long long subsegnumber;
 
 #ifdef TRILIBRARY
   if (!b->quiet) {
@@ -14827,7 +14827,7 @@ char **argv;
   struct otri triangleloop, trisym;
   struct osub checkmark;
   vertex p1, p2;
-  long edgenumber;
+  long long edgenumber;
   triangle ptr;                         /* Temporary variable used by sym(). */
   subseg sptr;                      /* Temporary variable used by tspivot(). */
 
@@ -14992,7 +14992,7 @@ char **argv;
   vertex torg, tdest, tapex;
   REAL circumcenter[2];
   REAL xi, eta;
-  long vnodenumber, vedgenumber;
+  long long vnodenumber, vedgenumber;
   int p1, p2;
   int i;
   triangle ptr;                         /* Temporary variable used by sym(). */
@@ -15189,7 +15189,7 @@ char **argv;
   FILE *outfile;
 #endif /* not TRILIBRARY */
   struct otri triangleloop, trisym;
-  long elementnumber;
+  long long elementnumber;
   int neighbor1, neighbor2, neighbor3;
   triangle ptr;                         /* Temporary variable used by sym(). */
 
@@ -15288,7 +15288,7 @@ char **argv;
   struct otri triangleloop;
   vertex vertexloop;
   vertex p1, p2, p3;
-  long outvertices;
+  long long outvertices;
 
   if (!b->quiet) {
     printf("Writing %s.\n", offfilename);

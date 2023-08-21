@@ -144,11 +144,11 @@ int main (int argc, char** argv)
             fprintf(fp_short, "%.2f,%.2f,%.2f", evac_get_time_m(), bim_tools_get_numofpeople(bim), ((bim_zone_t*)zones->data[OUTSIDE_IDX(bim)])->numofpeople);
             fflush(fp_short);
             fclose(fp_short);
-            free(output_short);
+//            free(output_short);
         }
 
         fclose(fp_detail);
-        free(output_detail);
+//        free(output_detail);
         bim_graph_free(graph);
         bim_tools_free(bim);
     }
