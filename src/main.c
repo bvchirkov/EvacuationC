@@ -13,10 +13,8 @@
  * limitations under the License.
  */
 
-#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include "logger.h"
 #include "loggerconf.h"
 

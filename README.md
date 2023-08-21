@@ -24,6 +24,14 @@
 
 - cmake >= 3.16
 - gcc-10 или clang-11 (для Windows рекомендуется использовать MinGW)
+- ninja последней версии
+
+1. Скачать репозиторий`git clone https://github.com/bvchirkov/EvacuationC` (неактуально для ветки master на данный момент. TODO: удалить это примечание после внесения изменений в master ветку)
+2. Перейти в директорию `cd EvacuationC`
+3. Запуск сборки CMake `cmake -G Ninja -B build`
+4. Компиляция `cmake --build build`
+
+Исполняемый файл будет находиться в директории build
 
 # Запуск
 
